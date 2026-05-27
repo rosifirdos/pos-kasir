@@ -5,6 +5,7 @@ import '../providers/cart_provider.dart';
 import '../models/product.dart';
 import '../models/cart_item.dart';
 import 'admin_screen.dart';
+import 'dashboard_screen.dart';
 
 class PosScreen extends StatefulWidget {
   const PosScreen({Key? key}) : super(key: key);
@@ -68,6 +69,16 @@ class _PosScreenState extends State<PosScreen> {
       appBar: AppBar(
         title: const Text('POS Garis Awan'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.dashboard),
+            tooltip: 'Dashboard Bisnis',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DashboardScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: 'Manajemen Toko',

@@ -70,4 +70,22 @@ class ApiService {
     );
     return response.statusCode == 201;
   }
+
+  Future<Map<String, dynamic>> getDailySummary() async {
+    final response = await http.get(Uri.parse('$baseUrl/reports/daily-summary'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load daily summary');
+    }
+  }
+
+  Future<List<dynamic>> getTopProducts() async {
+    final response = await http.get(Uri.parse('$baseUrl/reports/top-products'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load top products');
+    }
+  }
 }
