@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("categories")
+}
+
+model Product {
+  id               Int                @id @default(autoincrement())
+  categoryId       Int
+  sku              String             @unique
+  name             String
+  buyPrice         Decimal            @db.Decimal(10, 2)
+  sellPrice        Decimal            @db.Decimal(10, 2)
+  currentStock     Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  category         Category           @relation(fields: [categoryId], references: [id])
+  transactionItems TransactionDetail[]
+  stockAdjustments StockAdjustment[]
+
+  @@map("products")
+}
+
+model Transaction {
+  id             Int                 @id @default(autoincrement())
+  invoiceNumber  String              @unique
+  totalAmount    Decimal             @db.Decimal(10, 2)
+  paymentMethod  String              @default("CASH")
+  createdAt      DateTime            @default(now())
+  
+  details        TransactionDetail[]
+
+  @@map("transactions")
+}
+
+model TransactionDetail {
+  id            Int         @id @default(autoincrement())
+  transactionId Int
+  productId     Int
+  quantity      Int
+  unitPrice     Decimal     @db.Decimal(10, 2)
+  subtotal      Decimal     @db.Decimal(10, 2)
+
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  product       Product     @relation(fields: [productId], references: [id])
+
+  @@map("transaction_details")
+}
+
+model StockAdjustment {
+  id             Int      @id @default(autoincrement())
+  productId      Int
+  adjustmentType String   // 'IN' or 'OUT'
+  quantity       Int
+  note           String?
+  createdAt      DateTime @default(now())
+
+  product        Product  @relation(fields: [productId], references: [id])
+
+  @@map("stock_adjustments")
+}
