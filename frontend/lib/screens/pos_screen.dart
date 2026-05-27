@@ -133,31 +133,54 @@ class _PosScreenState extends State<PosScreen> {
                         child: cartProvider.items.isEmpty
                             ? const Center(child: Text('Keranjang kosong'))
                             : ListView.builder(
-                                itemCount: cartProvider.items.length,
-                                itemBuilder: (context, index) {
-                                  final itemKey = cartProvider.items.keys.elementAt(index);
-                                  final cartItem = cartProvider.items[itemKey]!;
-                                  return ListTile(
-                                    title: Text(cartItem.product.name),
-                                    subtitle: Text('Rp ${cartItem.product.sellPrice.toStringAsFixed(0)} x ${cartItem.quantity}'),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.remove_circle_outline),
-                                          onPressed: () => cartProvider.decreaseQuantity(itemKey),
+                              itemCount: cartProvider.items.length,
+                              itemBuilder: (context, index) {
+                                final itemKey = cartProvider.items.keys.elementAt(index);
+                                final cartItem = cartProvider.items[itemKey]!;
+
+                                // Controller for direct quantity input
+                                final qtyController = TextEditingController(text: cartItem.quantity.toString());
+
+                                return ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  title: Text(cartItem.product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                  subtitle: Text('Rp ${cartItem.product.sellPrice.toStringAsFixed(0)}'),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.remove_circle_outline, size: 20, color: Colors.red),
+                                        onPressed: () => cartProvider.decreaseQuantity(itemKey),
+                                      ),
+                                      SizedBox(
+                                        width: 45,
+                                        child: TextField(
+                                          controller: qtyController,
+                                          textAlign: TextAlign.center,
+                                          keyboardType: TextInputType.number,
+                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                          decoration: const InputDecoration(
+                                            contentPadding: EdgeInsets.zero,
+                                            isDense: true,
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          onSubmitted: (val) {
+                                            int? newQty = int.tryParse(val);
+                                            if (newQty != null) {
+                                              cartProvider.updateQuantity(itemKey, newQty);
+                                            }
+                                          },
                                         ),
-                                        Text('${cartItem.quantity}'),
-                                        IconButton(
-                                          icon: const Icon(Icons.add_circle_outline),
-                                          onPressed: () => cartProvider.addItem(cartItem.product),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.add_circle_outline, size: 20, color: Colors.green),
+                                        onPressed: () => cartProvider.addItem(cartItem.product),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),                      ),
                       Container(
                         padding: const EdgeInsets.all(16.0),
                         decoration: BoxDecoration(

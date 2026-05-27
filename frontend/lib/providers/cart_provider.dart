@@ -63,6 +63,27 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void updateQuantity(int productId, int quantity) {
+    if (!_items.containsKey(productId)) return;
+
+    if (quantity <= 0) {
+      _items.remove(productId);
+    } else {
+      // Cap quantity to available stock
+      int availableStock = _items[productId]!.product.currentStock;
+      int finalQty = quantity > availableStock ? availableStock : quantity;
+
+      _items.update(
+        productId,
+        (existingCartItem) => CartItem(
+          product: existingCartItem.product,
+          quantity: finalQty,
+        ),
+      );
+    }
+    notifyListeners();
+  }
+
   void clearCart() {
     _items.clear();
     notifyListeners();
