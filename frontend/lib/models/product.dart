@@ -5,6 +5,7 @@ class Product {
   final int categoryId;
   final String sku;
   final String name;
+  final String? imageUrl;
   final double buyPrice;
   final double sellPrice;
   final int currentStock;
@@ -15,6 +16,7 @@ class Product {
     required this.categoryId,
     required this.sku,
     required this.name,
+    this.imageUrl,
     required this.buyPrice,
     required this.sellPrice,
     required this.currentStock,
@@ -27,6 +29,7 @@ class Product {
       categoryId: json['categoryId'],
       sku: json['sku'],
       name: json['name'],
+      imageUrl: json['imageUrl'],
       buyPrice: double.parse(json['buyPrice'].toString()),
       sellPrice: double.parse(json['sellPrice'].toString()),
       currentStock: json['currentStock'],

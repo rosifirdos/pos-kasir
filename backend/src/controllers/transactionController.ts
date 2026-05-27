@@ -40,7 +40,11 @@ export const createTransaction = async (req: Request, res: Response) => {
           }
         },
         include: {
-          details: true
+          details: {
+            include: {
+              product: true
+            }
+          }
         }
       });
 

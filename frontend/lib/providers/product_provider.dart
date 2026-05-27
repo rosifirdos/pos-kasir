@@ -29,14 +29,20 @@ class ProductProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> createProduct(Map<String, dynamic> data) async {
-    bool success = await _apiService.createProduct(data);
+  Future<bool> createProduct(Map<String, dynamic> data, {String? imagePath}) async {
+    bool success = await _apiService.createProduct(data, imagePath: imagePath);
     if (success) await fetchData();
     return success;
   }
 
-  Future<bool> updateProduct(int id, Map<String, dynamic> data) async {
-    bool success = await _apiService.updateProduct(id, data);
+  Future<bool> updateProduct(int id, Map<String, dynamic> data, {String? imagePath}) async {
+    bool success = await _apiService.updateProduct(id, data, imagePath: imagePath);
+    if (success) await fetchData();
+    return success;
+  }
+
+  Future<bool> deleteProduct(int id) async {
+    bool success = await _apiService.deleteProduct(id);
     if (success) await fetchData();
     return success;
   }

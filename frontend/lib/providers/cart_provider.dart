@@ -89,8 +89,8 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> checkout(String paymentMethod) async {
-    if (_items.isEmpty) return false;
+  Future<dynamic> checkout(String paymentMethod) async {
+    if (_items.isEmpty) return null;
 
     try {
       final orderItems = _items.values.map((item) => {
@@ -99,15 +99,15 @@ class CartProvider with ChangeNotifier {
         'unitPrice': item.product.sellPrice,
       }).toList();
 
-      final success = await _apiService.createTransaction(paymentMethod, orderItems);
-      if (success) {
+      final transaction = await _apiService.createTransaction(paymentMethod, orderItems);
+      if (transaction != null) {
         clearCart();
-        return true;
+        return transaction;
       }
-      return false;
+      return null;
     } catch (e) {
       print('Checkout error: $e');
-      return false;
+      return null;
     }
   }
 }

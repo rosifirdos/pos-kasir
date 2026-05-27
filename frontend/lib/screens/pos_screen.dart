@@ -4,8 +4,10 @@ import '../providers/product_provider.dart';
 import '../providers/cart_provider.dart';
 import '../models/product.dart';
 import '../models/cart_item.dart';
+import '../services/api_service.dart';
 import 'admin_screen.dart';
 import 'dashboard_screen.dart';
+import 'receipt_dialog.dart';
 
 class PosScreen extends StatefulWidget {
   const PosScreen({Key? key}) : super(key: key);
@@ -23,6 +25,24 @@ class _PosScreenState extends State<PosScreen> {
     });
   }
 
+  void _processCheckout(BuildContext context, String paymentMethod) async {
+    final transaction = await Provider.of<CartProvider>(context, listen: false).checkout(paymentMethod);
+    if (transaction != null) {
+      Provider.of<ProductProvider>(context, listen: false).fetchData(); // Refresh stock
+      // Show receipt dialog
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Transaksi Berhasil!'),
+          content: ReceiptWidget(transaction: transaction),
+          contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transaksi Gagal!')));
+    }
+  }
+
   void _showCheckoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -33,28 +53,16 @@ class _PosScreenState extends State<PosScreen> {
           children: [
             ListTile(
               title: const Text('CASH'),
-              onTap: () async {
+              onTap: () {
                 Navigator.pop(ctx);
-                bool success = await Provider.of<CartProvider>(context, listen: false).checkout('CASH');
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transaksi Berhasil!')));
-                  Provider.of<ProductProvider>(context, listen: false).fetchData(); // Refresh stock
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transaksi Gagal!')));
-                }
+                _processCheckout(context, 'CASH');
               },
             ),
             ListTile(
               title: const Text('DEBIT'),
-              onTap: () async {
+              onTap: () {
                 Navigator.pop(ctx);
-                bool success = await Provider.of<CartProvider>(context, listen: false).checkout('DEBIT');
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transaksi Berhasil!')));
-                  Provider.of<ProductProvider>(context, listen: false).fetchData();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transaksi Gagal!')));
-                }
+                _processCheckout(context, 'DEBIT');
               },
             ),
           ],
@@ -301,7 +309,13 @@ class ProductCard extends StatelessWidget {
               children: [
                 Container(
                   color: Colors.blue[50],
-                  child: const Icon(Icons.shopping_bag, size: 50, color: Colors.blue),
+                  child: (product.imageUrl != null && product.imageUrl!.isNotEmpty)
+                      ? Image.network(
+                          product.imageUrl!.startsWith('http') ? product.imageUrl! : '${ApiService.siteUrl}${product.imageUrl}',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.shopping_bag, size: 50, color: Colors.blue),
+                        )
+                      : const Icon(Icons.shopping_bag, size: 50, color: Colors.blue),
                 ),
                 Positioned(
                   top: 8,

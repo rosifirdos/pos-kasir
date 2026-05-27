@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as p;
 import '../models/category.dart';
 import '../models/product.dart';
 
 class ApiService {
   // Use 10.0.2.2 for Android emulator, or actual IP for physical devices.
   static const String baseUrl = 'http://localhost:3000/api';
+  static const String siteUrl = 'http://localhost:3000';
 
   Future<List<Category>> getCategories() async {
     final response = await http.get(Uri.parse('$baseUrl/categories'));
@@ -27,7 +30,7 @@ class ApiService {
     }
   }
 
-  Future<bool> createTransaction(String paymentMethod, List<Map<String, dynamic>> items) async {
+  Future<dynamic> createTransaction(String paymentMethod, List<Map<String, dynamic>> items) async {
     final response = await http.post(
       Uri.parse('$baseUrl/transactions'),
       headers: {'Content-Type': 'application/json'},
@@ -36,23 +39,55 @@ class ApiService {
         'items': items,
       }),
     );
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    }
+    return null;
+  }
+
+  Future<bool> createProduct(Map<String, dynamic> data, {String? imagePath}) async {
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/products'));
+    
+    data.forEach((key, value) {
+      request.fields[key] = value.toString();
+    });
+
+    if (imagePath != null && imagePath.isNotEmpty) {
+      String ext = p.extension(imagePath).replaceFirst('.', '').toLowerCase();
+      request.files.add(await http.MultipartFile.fromPath(
+        'image', 
+        imagePath,
+        contentType: MediaType('image', ext.isEmpty ? 'jpeg' : (ext == 'jpg' ? 'jpeg' : ext)),
+      ));
+    }
+
+    final response = await request.send();
     return response.statusCode == 201;
   }
 
-  Future<bool> createProduct(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/products'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(data),
-    );
-    return response.statusCode == 201;
+  Future<bool> updateProduct(int id, Map<String, dynamic> data, {String? imagePath}) async {
+    var request = http.MultipartRequest('PUT', Uri.parse('$baseUrl/products/$id'));
+    
+    data.forEach((key, value) {
+      request.fields[key] = value.toString();
+    });
+
+    if (imagePath != null && imagePath.isNotEmpty) {
+      String ext = p.extension(imagePath).replaceFirst('.', '').toLowerCase();
+      request.files.add(await http.MultipartFile.fromPath(
+        'image', 
+        imagePath,
+        contentType: MediaType('image', ext.isEmpty ? 'jpeg' : (ext == 'jpg' ? 'jpeg' : ext)),
+      ));
+    }
+
+    final response = await request.send();
+    return response.statusCode == 200;
   }
 
-  Future<bool> updateProduct(int id, Map<String, dynamic> data) async {
-    final response = await http.put(
+  Future<bool> deleteProduct(int id) async {
+    final response = await http.delete(
       Uri.parse('$baseUrl/products/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(data),
     );
     return response.statusCode == 200;
   }

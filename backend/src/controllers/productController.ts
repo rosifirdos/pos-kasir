@@ -4,6 +4,7 @@ import prisma from '../config/prisma';
 export const getProducts = async (req: Request, res: Response) => {
   try {
     const products = await prisma.product.findMany({
+      where: { deletedAt: null },
       include: { category: true }
     });
     res.json(products);
@@ -14,15 +15,22 @@ export const getProducts = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { categoryId, sku, name, buyPrice, sellPrice, currentStock } = req.body;
+    const { categoryId, sku, name, buyPrice, sellPrice, currentStock, imageUrl } = req.body;
+    
+    let finalImageUrl = imageUrl;
+    if (req.file) {
+      finalImageUrl = `/uploads/${req.file.filename}`;
+    }
+
     const product = await prisma.product.create({
       data: {
-        categoryId,
+        categoryId: Number(categoryId),
         sku,
         name,
         buyPrice,
         sellPrice,
-        currentStock: currentStock || 0
+        currentStock: Number(currentStock) || 0,
+        imageUrl: finalImageUrl
       }
     });
     res.status(201).json(product);
@@ -34,12 +42,42 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { categoryId, sku, name, buyPrice, sellPrice, currentStock } = req.body;
+    const { categoryId, sku, name, buyPrice, sellPrice, currentStock, imageUrl } = req.body;
+
+    let finalImageUrl = imageUrl;
+    if (req.file) {
+      finalImageUrl = `/uploads/${req.file.filename}`;
+    }
+
     const product = await prisma.product.update({
       where: { id: Number(id) },
-      data: { categoryId, sku, name, buyPrice, sellPrice, currentStock }
+      data: { 
+        categoryId: categoryId ? Number(categoryId) : undefined, 
+        sku, 
+        name, 
+        buyPrice, 
+        sellPrice, 
+        currentStock: currentStock !== undefined ? Number(currentStock) : undefined,
+        imageUrl: finalImageUrl 
+      }
     });
     res.json(product);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteProduct = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const productId = Number(id);
+
+    await prisma.product.update({
+      where: { id: productId },
+      data: { deletedAt: new Date() }
+    });
+
+    res.json({ message: 'Product soft-deleted successfully' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
