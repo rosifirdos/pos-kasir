@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/cart_provider.dart';
 import '../models/product.dart';
+import '../models/cart_item.dart';
 import 'admin_screen.dart';
 
 class PosScreen extends StatefulWidget {
@@ -133,54 +134,18 @@ class _PosScreenState extends State<PosScreen> {
                         child: cartProvider.items.isEmpty
                             ? const Center(child: Text('Keranjang kosong'))
                             : ListView.builder(
-                              itemCount: cartProvider.items.length,
-                              itemBuilder: (context, index) {
-                                final itemKey = cartProvider.items.keys.elementAt(index);
-                                final cartItem = cartProvider.items[itemKey]!;
-
-                                // Controller for direct quantity input
-                                final qtyController = TextEditingController(text: cartItem.quantity.toString());
-
-                                return ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                  title: Text(cartItem.product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                  subtitle: Text('Rp ${cartItem.product.sellPrice.toStringAsFixed(0)}'),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.remove_circle_outline, size: 20, color: Colors.red),
-                                        onPressed: () => cartProvider.decreaseQuantity(itemKey),
-                                      ),
-                                      SizedBox(
-                                        width: 45,
-                                        child: TextField(
-                                          controller: qtyController,
-                                          textAlign: TextAlign.center,
-                                          keyboardType: TextInputType.number,
-                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                                          decoration: const InputDecoration(
-                                            contentPadding: EdgeInsets.zero,
-                                            isDense: true,
-                                            border: OutlineInputBorder(),
-                                          ),
-                                          onSubmitted: (val) {
-                                            int? newQty = int.tryParse(val);
-                                            if (newQty != null) {
-                                              cartProvider.updateQuantity(itemKey, newQty);
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.add_circle_outline, size: 20, color: Colors.green),
-                                        onPressed: () => cartProvider.addItem(cartItem.product),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),                      ),
+                                itemCount: cartProvider.items.length,
+                                itemBuilder: (context, index) {
+                                  final itemKey = cartProvider.items.keys.elementAt(index);
+                                  final cartItem = cartProvider.items[itemKey]!;
+                                  return CartItemWidget(
+                                    key: ValueKey(itemKey),
+                                    itemKey: itemKey,
+                                    cartItem: cartItem,
+                                  );
+                                },
+                              ),
+                      ),
                       Container(
                         padding: const EdgeInsets.all(16.0),
                         decoration: BoxDecoration(
@@ -217,6 +182,89 @@ class _PosScreenState extends State<PosScreen> {
               ),
             ),
           )
+        ],
+      ),
+    );
+  }
+}
+
+class CartItemWidget extends StatefulWidget {
+  final int itemKey;
+  final CartItem cartItem;
+
+  const CartItemWidget({
+    required Key key,
+    required this.itemKey,
+    required this.cartItem,
+  }) : super(key: key);
+
+  @override
+  _CartItemWidgetState createState() => _CartItemWidgetState();
+}
+
+class _CartItemWidgetState extends State<CartItemWidget> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.cartItem.quantity.toString());
+  }
+
+  @override
+  void didUpdateWidget(CartItemWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Sync controller if provider value changed from outside (e.g. +/- buttons)
+    if (widget.cartItem.quantity.toString() != _controller.text) {
+      _controller.text = widget.cartItem.quantity.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      title: Text(widget.cartItem.product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      subtitle: Text('Rp ${widget.cartItem.product.sellPrice.toStringAsFixed(0)}'),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.remove_circle_outline, size: 20, color: Colors.red),
+            onPressed: () => cartProvider.decreaseQuantity(widget.itemKey),
+          ),
+          SizedBox(
+            width: 50,
+            child: TextField(
+              controller: _controller,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(
+                contentPadding: EdgeInsets.symmetric(vertical: 8),
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (val) {
+                int? newQty = int.tryParse(val);
+                if (newQty != null) {
+                  cartProvider.updateQuantity(widget.itemKey, newQty);
+                }
+              },
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline, size: 20, color: Colors.green),
+            onPressed: () => cartProvider.addItem(widget.cartItem.product),
+          ),
         ],
       ),
     );
