@@ -38,4 +38,36 @@ class ApiService {
     );
     return response.statusCode == 201;
   }
+
+  Future<bool> createProduct(Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/products'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    return response.statusCode == 201;
+  }
+
+  Future<bool> updateProduct(int id, Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/products/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    return response.statusCode == 200;
+  }
+
+  Future<bool> adjustStock(int productId, String type, int quantity, String note) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/stocks'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'productId': productId,
+        'adjustmentType': type,
+        'quantity': quantity,
+        'note': note,
+      }),
+    );
+    return response.statusCode == 201;
+  }
 }

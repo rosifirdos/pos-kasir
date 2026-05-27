@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/cart_provider.dart';
 import '../models/product.dart';
+import 'admin_screen.dart';
 
 class PosScreen extends StatefulWidget {
   const PosScreen({Key? key}) : super(key: key);
@@ -65,6 +66,18 @@ class _PosScreenState extends State<PosScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('POS Garis Awan'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Manajemen Toko',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Row(
         children: [

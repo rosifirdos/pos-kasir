@@ -28,4 +28,22 @@ class ProductProvider with ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<bool> createProduct(Map<String, dynamic> data) async {
+    bool success = await _apiService.createProduct(data);
+    if (success) await fetchData();
+    return success;
+  }
+
+  Future<bool> updateProduct(int id, Map<String, dynamic> data) async {
+    bool success = await _apiService.updateProduct(id, data);
+    if (success) await fetchData();
+    return success;
+  }
+
+  Future<bool> adjustStock(int productId, String type, int quantity, String note) async {
+    bool success = await _apiService.adjustStock(productId, type, quantity, note);
+    if (success) await fetchData();
+    return success;
+  }
 }
