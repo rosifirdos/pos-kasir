@@ -209,48 +209,75 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      child: InkWell(
-        onTap: () {
-          Provider.of<CartProvider>(context, listen: false).addItem(product);
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Container(
-                color: Colors.blue[50],
-                child: const Icon(Icons.shopping_bag, size: 50, color: Colors.blue),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Rp ${product.sellPrice.toStringAsFixed(0)}',
-                    style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Stok: ${product.currentStock}',
-                    style: TextStyle(
-                      color: product.currentStock <= 5 ? Colors.red : Colors.grey[600],
-                      fontSize: 12,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  color: Colors.blue[50],
+                  child: const Icon(Icons.shopping_bag, size: 50, color: Colors.blue),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: product.currentStock <= 5 ? Colors.red : Colors.blue,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Stok: ${product.currentStock}',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ],
-              ),
-            )
-          ],
-        ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Rp ${product.sellPrice.toStringAsFixed(0)}',
+                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: product.currentStock > 0
+                        ? () {
+                            Provider.of<CartProvider>(context, listen: false).addItem(product);
+                          }
+                        : null,
+                    icon: const Icon(Icons.add_shopping_cart, size: 16),
+                    label: const Text('TAMBAH'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
       ),
     );
   }
