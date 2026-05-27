@@ -18,22 +18,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    // Data is fetched automatically as soon as the dashboard is opened
     _fetchData();
   }
 
   Future<void> _fetchData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final summary = await _apiService.getDailySummary();
       final topProducts = await _apiService.getTopProducts();
-      setState(() {
-        _summary = summary;
-        _topProducts = topProducts;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _summary = summary;
+          _topProducts = topProducts;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('Dashboard error: $e');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
