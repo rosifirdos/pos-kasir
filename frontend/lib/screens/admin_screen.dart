@@ -19,6 +19,21 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> {
   String _searchQuery = '';
 
+  String _generateSku(String categoryName) {
+    final cleanName = categoryName.replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), '').trim().toUpperCase();
+    if (cleanName.isEmpty) return 'PRD-${DateTime.now().millisecondsSinceEpoch}';
+    final words = cleanName.split(RegExp(r'\s+'));
+    String prefix;
+    if (words.length > 1) {
+      // e.g. "Makanan Ringan" -> "MR"
+      prefix = words.map((w) => w.isNotEmpty ? w[0] : '').join();
+    } else {
+      // e.g. "Minuman" -> "MIN"
+      prefix = cleanName.length >= 3 ? cleanName.substring(0, 3) : cleanName;
+    }
+    return '$prefix-${DateTime.now().millisecondsSinceEpoch}';
+  }
+
   void _showProductForm({Product? product}) {
     final provider = Provider.of<ProductProvider>(context, listen: false);
     if (provider.categories.isEmpty) {
@@ -28,8 +43,12 @@ class _AdminScreenState extends State<AdminScreen> {
 
     final isEdit = product != null;
     final nameCtrl = TextEditingController(text: isEdit ? product.name : '');
+    
+    int selectedCategoryId = isEdit ? product.categoryId : provider.categories.first.id;
+    final initialCategory = provider.categories.firstWhere((c) => c.id == selectedCategoryId);
+
     final skuCtrl = TextEditingController(
-      text: isEdit ? product.sku : 'SKU-${DateTime.now().millisecondsSinceEpoch}',
+      text: isEdit ? product.sku : _generateSku(initialCategory.name),
     );
     final buyPriceCtrl = TextEditingController(text: isEdit ? product.buyPrice.toStringAsFixed(0) : '');
     final sellPriceCtrl = TextEditingController(text: isEdit ? product.sellPrice.toStringAsFixed(0) : '');
@@ -37,7 +56,6 @@ class _AdminScreenState extends State<AdminScreen> {
     final imageCtrl = TextEditingController(text: isEdit ? product.imageUrl : '');
     
     String? selectedImagePath;
-    int selectedCategoryId = isEdit ? product.categoryId : provider.categories.first.id;
 
     showDialog(
       context: context,
@@ -63,7 +81,15 @@ class _AdminScreenState extends State<AdminScreen> {
                         value: selectedCategoryId,
                         items: provider.categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
                         onChanged: (val) {
-                          if (val != null) selectedCategoryId = val;
+                          if (val != null) {
+                            setDialogState(() {
+                              selectedCategoryId = val;
+                              if (!isEdit) {
+                                final selectedCat = provider.categories.firstWhere((c) => c.id == val);
+                                skuCtrl.text = _generateSku(selectedCat.name);
+                              }
+                            });
+                          }
                         },
                         decoration: const InputDecoration(labelText: 'Kategori'),
                       ),
@@ -81,7 +107,8 @@ class _AdminScreenState extends State<AdminScreen> {
                                         tooltip: 'Acak SKU',
                                         onPressed: () {
                                           setDialogState(() {
-                                            skuCtrl.text = 'SKU-${DateTime.now().millisecondsSinceEpoch}';
+                                            final selectedCat = provider.categories.firstWhere((c) => c.id == selectedCategoryId);
+                                            skuCtrl.text = _generateSku(selectedCat.name);
                                           });
                                         },
                                       )
