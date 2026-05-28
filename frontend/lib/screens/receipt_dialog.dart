@@ -76,7 +76,12 @@ class ReceiptWidget extends StatelessWidget {
 
     // Temporary update app title for Web printing default filename
     try {
-      await SystemChrome.setApplicationTitle(fileName);
+      await SystemChrome.setApplicationSwitcherDescription(
+        ApplicationSwitcherDescription(
+          label: fileName,
+          primaryColor: 0xFF000000,
+        ),
+      );
     } catch (_) {}
 
     await Printing.layoutPdf(
@@ -85,7 +90,12 @@ class ReceiptWidget extends StatelessWidget {
     );
 
     try {
-      await SystemChrome.setApplicationTitle('Garis Awan POS');
+      await SystemChrome.setApplicationSwitcherDescription(
+        const ApplicationSwitcherDescription(
+          label: 'Garis Awan POS',
+          primaryColor: 0xFF000000,
+        ),
+      );
     } catch (_) {}
   }
 
