@@ -37,6 +37,15 @@ class ApiService {
     }
   }
 
+  Future<bool> createCategory(String name) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/categories'),
+      headers: await _getHeaders(isJson: true),
+      body: jsonEncode({'name': name}),
+    );
+    return response.statusCode == 201;
+  }
+
   Future<List<Product>> getProducts() async {
     final response = await http.get(
       Uri.parse('$baseUrl/products'),

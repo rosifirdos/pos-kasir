@@ -29,6 +29,12 @@ class ProductProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> createCategory(String name) async {
+    bool success = await _apiService.createCategory(name);
+    if (success) await fetchData();
+    return success;
+  }
+
   Future<bool> createProduct(Map<String, dynamic> data, {String? imagePath}) async {
     bool success = await _apiService.createProduct(data, imagePath: imagePath);
     if (success) await fetchData();

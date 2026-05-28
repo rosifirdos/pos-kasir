@@ -239,6 +239,42 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
+  void _showCategoryForm() {
+    final nameCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Tambah Kategori Baru'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: TextField(
+            controller: nameCtrl,
+            decoration: const InputDecoration(labelText: 'Nama Kategori'),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+              onPressed: () async {
+                final name = nameCtrl.text.trim();
+                if (name.isEmpty) return;
+                
+                Navigator.pop(ctx);
+                final success = await Provider.of<ProductProvider>(context, listen: false).createCategory(name);
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(success ? 'Kategori berhasil ditambahkan!' : 'Gagal menambahkan kategori!')));
+                }
+              },
+              child: const Text('Simpan'),
+            )
+          ],
+        );
+      }
+    );
+  }
+
   void _confirmDelete(Product product) {
     showDialog(
       context: context,
@@ -337,6 +373,17 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
             ),
           ),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.indigo,
+              side: const BorderSide(color: Colors.indigo),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            icon: const Icon(Icons.add),
+            label: const Text('Tambah Kategori'),
+            onPressed: () => _showCategoryForm(),
+          ),
+          const SizedBox(width: 12),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.indigo,
