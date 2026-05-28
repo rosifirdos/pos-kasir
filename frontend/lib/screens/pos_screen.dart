@@ -8,6 +8,9 @@ import '../services/api_service.dart';
 import 'admin_screen.dart';
 import 'dashboard_screen.dart';
 import 'receipt_dialog.dart';
+import 'package:intl/intl.dart';
+
+final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
 class PosScreen extends StatefulWidget {
   const PosScreen({Key? key}) : super(key: key);
@@ -295,7 +298,7 @@ class _PosScreenState extends State<PosScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('Total Tagihan', style: TextStyle(fontSize: 16, color: Colors.grey.shade700)),
-                              Text('Rp ${cartProvider.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.indigo)),
+                              Text(_formatter.format(cartProvider.totalAmount), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.indigo)),
                             ],
                           ),
                           const SizedBox(height: 24),
@@ -373,7 +376,7 @@ class _CartItemWidgetState extends State<CartItemWidget> {
               children: [
                 Text(widget.cartItem.product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
-                Text('Rp ${widget.cartItem.product.sellPrice.toStringAsFixed(0)}', style: TextStyle(color: Colors.grey.shade600)),
+                Text(_formatter.format(widget.cartItem.product.sellPrice), style: TextStyle(color: Colors.grey.shade600)),
               ],
             ),
           ),
@@ -433,71 +436,93 @@ class ProductCard extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade200),
       ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: product.currentStock > 0
-            ? () => Provider.of<CartProvider>(context, listen: false).addItem(product)
-            : null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(
-                    color: Colors.grey.shade100,
-                    child: (product.imageUrl != null && product.imageUrl!.isNotEmpty)
-                        ? Image.network(
-                            product.imageUrl!.startsWith('http') ? product.imageUrl! : '${ApiService.siteUrl}${product.imageUrl}',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: 40, color: Colors.grey.shade400),
-                          )
-                        : Icon(Icons.image, size: 40, color: Colors.grey.shade400),
-                  ),
-                  if (product.currentStock <= 5)
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: product.currentStock == 0 ? Colors.grey.shade800 : Colors.redAccent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          product.currentStock == 0 ? 'HABIS' : 'Sisa ${product.currentStock}',
-                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  color: Colors.grey.shade100,
+                  child: (product.imageUrl != null && product.imageUrl!.isNotEmpty)
+                      ? Image.network(
+                          product.imageUrl!.startsWith('http') ? product.imageUrl! : '${ApiService.siteUrl}${product.imageUrl}',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: 40, color: Colors.grey.shade400),
+                        )
+                      : Icon(Icons.image, size: 40, color: Colors.grey.shade400),
+                ),
+                if (product.currentStock <= 5)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: product.currentStock == 0 ? Colors.grey.shade800 : Colors.redAccent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        product.currentStock == 0 ? 'HABIS' : 'Sisa ${product.currentStock}',
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                       ),
                     ),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    product.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _formatter.format(product.sellPrice),
+                            style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Stok: ${product.currentStock}',
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
+                        color: Colors.white,
+                        style: IconButton.styleFrom(
+                          backgroundColor: product.currentStock > 0 ? Colors.indigo : Colors.grey.shade300,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                        onPressed: product.currentStock > 0
+                            ? () => Provider.of<CartProvider>(context, listen: false).addItem(product)
+                            : null,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      product.name,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      'Rp ${product.sellPrice.toStringAsFixed(0)}',
-                      style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          ],
-        ),
+          )
+        ],
       ),
     );
   }

@@ -5,6 +5,9 @@ import 'dart:io';
 import '../providers/product_provider.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
+import 'package:intl/intl.dart';
+
+final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({Key? key}) : super(key: key);
@@ -380,8 +383,8 @@ class _AdminScreenState extends State<AdminScreen> {
                                   child: Text(product.category?.name ?? '-', style: TextStyle(color: Colors.indigo.shade900, fontSize: 12)),
                                 )
                               ),
-                              DataCell(Text('Rp ${product.buyPrice.toStringAsFixed(0)}')),
-                              DataCell(Text('Rp ${product.sellPrice.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold))),
+                              DataCell(Text(_formatter.format(product.buyPrice))),
+                              DataCell(Text(_formatter.format(product.sellPrice), style: const TextStyle(fontWeight: FontWeight.bold))),
                               DataCell(
                                 Row(
                                   children: [

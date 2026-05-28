@@ -5,6 +5,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
 class ReceiptWidget extends StatelessWidget {
   final dynamic transaction;
 
@@ -25,7 +27,7 @@ class ReceiptWidget extends StatelessWidget {
                 child: pw.Column(
                   children: [
                     pw.Text('GARIS AWAN POS', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18)),
-                    pw.Text('Jl. Digitalisasi UMKM No. 1'),
+                    pw.Text('Jl. Digitalisasi Bangsa No. 1'),
                     pw.Text('Telp: 0812-3456-7890'),
                     pw.SizedBox(height: 10),
                     pw.Text('STRUK PEMBAYARAN', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
@@ -43,7 +45,7 @@ class ReceiptWidget extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Expanded(child: pw.Text('${item['product']['name']} x${item['quantity']}')),
-                    pw.Text('Rp ${item['subtotal']}'),
+                    pw.Text(_formatter.format(double.parse(item['subtotal'].toString()))),
                   ],
                 );
               }).toList(),
@@ -52,7 +54,7 @@ class ReceiptWidget extends StatelessWidget {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text('TOTAL', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
-                  pw.Text('Rp ${transaction['totalAmount']}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                  pw.Text(_formatter.format(double.parse(transaction['totalAmount'].toString())), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
                 ],
               ),
               pw.SizedBox(height: 20),
@@ -99,7 +101,7 @@ class ReceiptWidget extends StatelessWidget {
                   child: Column(
                     children: [
                       Text('GARIS AWAN POS', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 20)),
-                      Text('Jl. Digitalisasi UMKM No. 1', style: receiptTextStyle),
+                      Text('Jl. Digitalisasi Bangsa No. 1', style: receiptTextStyle),
                       Text('Telp: 0812-3456-7890', style: receiptTextStyle),
                       const SizedBox(height: 16),
                       Text('STRUK PEMBAYARAN', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold)),
@@ -121,8 +123,8 @@ class ReceiptWidget extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: Text('${item['product']['name']}\n${item['quantity']} x Rp ${double.parse(item['unitPrice'].toString()).toStringAsFixed(0)}', style: receiptTextStyle)),
-                        Text('Rp ${double.parse(item['subtotal'].toString()).toStringAsFixed(0)}', style: receiptTextStyle),
+                        Expanded(child: Text('${item['product']['name']}\n${item['quantity']} x ${_formatter.format(double.parse(item['unitPrice'].toString()))}', style: receiptTextStyle)),
+                        Text(_formatter.format(double.parse(item['subtotal'].toString())), style: receiptTextStyle),
                       ],
                     ),
                   );
@@ -134,7 +136,7 @@ class ReceiptWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('TOTAL', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
-                    Text('Rp ${double.parse(transaction['totalAmount'].toString()).toStringAsFixed(0)}', 
+                    Text(_formatter.format(double.parse(transaction['totalAmount'].toString())), 
                       style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
                   ],
                 ),
