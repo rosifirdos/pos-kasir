@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 
 final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
@@ -12,7 +13,7 @@ class ReceiptWidget extends StatelessWidget {
 
   const ReceiptWidget({Key? key, required this.transaction}) : super(key: key);
 
-  Future<void> _printReceipt() async {
+  pw.Document _generatePdfDocument() {
     final pdf = pw.Document();
     final date = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(transaction['createdAt']));
 
@@ -64,14 +65,39 @@ class ReceiptWidget extends StatelessWidget {
         },
       ),
     );
+    return pdf;
+  }
 
+  Future<void> _printReceipt() async {
+    final pdf = _generatePdfDocument();
     final String invoiceNumber = transaction['invoiceNumber'] ?? 'INV';
     final String timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final String fileName = 'Struk_${invoiceNumber}_$timestamp';
 
+    // Temporary update app title for Web printing default filename
+    try {
+      await SystemChrome.setApplicationTitle(fileName);
+    } catch (_) {}
+
     await Printing.layoutPdf(
       name: fileName,
       onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+
+    try {
+      await SystemChrome.setApplicationTitle('Garis Awan POS');
+    } catch (_) {}
+  }
+
+  Future<void> _savePdf() async {
+    final pdf = _generatePdfDocument();
+    final String invoiceNumber = transaction['invoiceNumber'] ?? 'INV';
+    final String timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final String fileName = 'Struk_${invoiceNumber}_$timestamp.pdf';
+
+    await Printing.sharePdf(
+      bytes: await pdf.save(),
+      filename: fileName,
     );
   }
 
@@ -156,6 +182,7 @@ class ReceiptWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
+                flex: 2,
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
                   style: OutlinedButton.styleFrom(
@@ -165,8 +192,22 @@ class ReceiptWidget extends StatelessWidget {
                   child: const Text('Tutup', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
+                flex: 3,
+                child: OutlinedButton.icon(
+                  onPressed: _savePdf,
+                  icon: const Icon(Icons.save_alt),
+                  label: const Text('Simpan PDF', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 3,
                 child: ElevatedButton.icon(
                   onPressed: _printReceipt,
                   icon: const Icon(Icons.print),
