@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import 'admin_screen.dart';
 import 'dashboard_screen.dart';
 import 'receipt_dialog.dart';
+import 'history_screen.dart';
 import 'package:intl/intl.dart';
 
 final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -105,6 +106,13 @@ class _PosScreenState extends State<PosScreen> {
         foregroundColor: Colors.indigo.shade900,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded),
+            tooltip: 'Riwayat Aktifitas',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryScreen()));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.bar_chart_rounded),
             tooltip: 'Dashboard Bisnis',
