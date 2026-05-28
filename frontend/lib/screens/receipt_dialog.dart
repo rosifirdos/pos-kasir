@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ReceiptWidget extends StatelessWidget {
   final dynamic transaction;
@@ -28,16 +29,16 @@ class ReceiptWidget extends StatelessWidget {
                     pw.Text('Telp: 0812-3456-7890'),
                     pw.SizedBox(height: 10),
                     pw.Text('STRUK PEMBAYARAN', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                    pw.Divider(),
+                    pw.Divider(borderStyle: pw.BorderStyle.dashed),
                   ],
                 ),
               ),
               pw.Text('No. Invoice: ${transaction['invoiceNumber']}'),
               pw.Text('Tanggal: $date'),
               pw.Text('Metode: ${transaction['paymentMethod']}'),
-              pw.Divider(),
+              pw.Divider(borderStyle: pw.BorderStyle.dashed),
               pw.SizedBox(height: 5),
-              ... (transaction['details'] as List).map((item) {
+              ...(transaction['details'] as List).map((item) {
                 return pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
@@ -46,7 +47,7 @@ class ReceiptWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-              pw.Divider(),
+              pw.Divider(borderStyle: pw.BorderStyle.dashed),
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -69,69 +70,132 @@ class ReceiptWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final details = transaction['details'] as List;
     final date = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(transaction['createdAt']));
+    
+    final receiptTextStyle = GoogleFonts.firaCode(
+      fontSize: 13,
+      color: Colors.black87,
+    );
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: 400,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAFAFA),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Center(
+          // Simulate paper top edge
+          Container(height: 10, decoration: const BoxDecoration(color: Colors.white)),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('GARIS AWAN POS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                Text('Jl. Digitalisasi UMKM No. 1'),
-                Divider(),
+                Center(
+                  child: Column(
+                    children: [
+                      Text('GARIS AWAN POS', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 20)),
+                      Text('Jl. Digitalisasi UMKM No. 1', style: receiptTextStyle),
+                      Text('Telp: 0812-3456-7890', style: receiptTextStyle),
+                      const SizedBox(height: 16),
+                      Text('STRUK PEMBAYARAN', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildDashedLine(),
+                const SizedBox(height: 16),
+                Text('No. Invoice : ${transaction['invoiceNumber']}', style: receiptTextStyle),
+                Text('Tanggal     : $date', style: receiptTextStyle),
+                Text('Metode      : ${transaction['paymentMethod']}', style: receiptTextStyle),
+                const SizedBox(height: 16),
+                _buildDashedLine(),
+                const SizedBox(height: 16),
+                ...details.map((item) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: Text('${item['product']['name']}\n${item['quantity']} x Rp ${double.parse(item['unitPrice'].toString()).toStringAsFixed(0)}', style: receiptTextStyle)),
+                        Text('Rp ${double.parse(item['subtotal'].toString()).toStringAsFixed(0)}', style: receiptTextStyle),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                const SizedBox(height: 16),
+                _buildDashedLine(),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('TOTAL', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
+                    Text('Rp ${double.parse(transaction['totalAmount'].toString()).toStringAsFixed(0)}', 
+                      style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                Center(child: Text('Terima Kasih atas Kunjungan Anda!', style: receiptTextStyle, textAlign: TextAlign.center)),
               ],
             ),
-          ),
-          Text('Invoice: ${transaction['invoiceNumber']}'),
-          Text('Tanggal: $date'),
-          Text('Pembayaran: ${transaction['paymentMethod']}'),
-          const Divider(),
-          const SizedBox(height: 8),
-          ...details.map((item) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(child: Text('${item['product']['name']} x${item['quantity']}')),
-                  Text('Rp ${double.parse(item['subtotal'].toString()).toStringAsFixed(0)}'),
-                ],
-              ),
-            );
-          }).toList(),
-          const Divider(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('TOTAL', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              Text('Rp ${double.parse(transaction['totalAmount'].toString()).toStringAsFixed(0)}', 
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green)),
-            ],
           ),
           const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
-                child: TextButton(
+                child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Tutup'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Tutup', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _printReceipt,
                   icon: const Icon(Icons.print),
-                  label: const Text('Cetak'),
+                  label: const Text('Cetak Struk', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ),
             ],
           )
         ],
       ),
+    );
+  }
+
+  Widget _buildDashedLine() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final boxWidth = constraints.constrainWidth();
+        const dashWidth = 5.0;
+        const dashHeight = 1.0;
+        final dashCount = (boxWidth / (2 * dashWidth)).floor();
+        return Flex(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          direction: Axis.horizontal,
+          children: List.generate(dashCount, (_) {
+            return const SizedBox(
+              width: dashWidth,
+              height: dashHeight,
+              child: DecoratedBox(decoration: BoxDecoration(color: Colors.black54)),
+            );
+          }),
+        );
+      },
     );
   }
 }
