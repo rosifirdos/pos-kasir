@@ -28,7 +28,9 @@ class _AdminScreenState extends State<AdminScreen> {
 
     final isEdit = product != null;
     final nameCtrl = TextEditingController(text: isEdit ? product.name : '');
-    final skuCtrl = TextEditingController(text: isEdit ? product.sku : '');
+    final skuCtrl = TextEditingController(
+      text: isEdit ? product.sku : 'SKU-${DateTime.now().millisecondsSinceEpoch}',
+    );
     final buyPriceCtrl = TextEditingController(text: isEdit ? product.buyPrice.toStringAsFixed(0) : '');
     final sellPriceCtrl = TextEditingController(text: isEdit ? product.sellPrice.toStringAsFixed(0) : '');
     final stockCtrl = TextEditingController(text: isEdit ? product.currentStock.toString() : '0');
@@ -68,7 +70,25 @@ class _AdminScreenState extends State<AdminScreen> {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Expanded(child: TextField(controller: skuCtrl, decoration: const InputDecoration(labelText: 'SKU (Kode)'))),
+                          Expanded(
+                            child: TextField(
+                              controller: skuCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'SKU (Kode)',
+                                suffixIcon: !isEdit
+                                    ? IconButton(
+                                        icon: const Icon(Icons.autorenew_rounded),
+                                        tooltip: 'Acak SKU',
+                                        onPressed: () {
+                                          setDialogState(() {
+                                            skuCtrl.text = 'SKU-${DateTime.now().millisecondsSinceEpoch}';
+                                          });
+                                        },
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          ),
                           const SizedBox(width: 16),
                           Expanded(flex: 2, child: TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nama Produk'))),
                         ],
