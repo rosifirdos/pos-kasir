@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
+import { logActivity } from '../utils/activityLogger';
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
@@ -33,6 +34,7 @@ export const createProduct = async (req: Request, res: Response) => {
         imageUrl: finalImageUrl
       }
     });
+    await logActivity('ADD_PRODUCT', 'Product', product.id, `Created product ${product.name}`);
     res.status(201).json(product);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -61,6 +63,7 @@ export const updateProduct = async (req: Request, res: Response) => {
         imageUrl: finalImageUrl 
       }
     });
+    await logActivity('UPDATE_PRODUCT', 'Product', product.id, `Updated product ${product.name}`);
     res.json(product);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -77,6 +80,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
       data: { deletedAt: new Date() }
     });
 
+    await logActivity('DELETE_PRODUCT', 'Product', productId, `Deleted product ID ${productId}`);
     res.json({ message: 'Product soft-deleted successfully' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

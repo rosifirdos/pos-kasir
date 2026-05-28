@@ -81,3 +81,14 @@ model StockAdjustment {
 
   @@map("stock_adjustments")
 }
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  action      String   // e.g., 'ADD_PRODUCT', 'UPDATE_PRODUCT', 'DELETE_PRODUCT', 'TRANSACTION', 'STOCK_IN', 'STOCK_OUT'
+  entityType  String   // e.g., 'Product', 'Transaction', 'Stock'
+  entityId    Int?     // The ID of the affected entity
+  details     String?  // JSON string or plain text for more details
+  createdAt   DateTime @default(now())
+
+  @@map("activity_logs")
+}

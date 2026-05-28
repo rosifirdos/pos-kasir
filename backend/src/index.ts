@@ -7,6 +7,7 @@ import productRoutes from './routes/productRoutes';
 import transactionRoutes from './routes/transactionRoutes';
 import stockRoutes from './routes/stockRoutes';
 import reportRoutes from './routes/reportRoutes';
+import activityRoutes from './routes/activityRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/stocks', stockRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/activities', activityRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

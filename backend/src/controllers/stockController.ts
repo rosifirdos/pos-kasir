@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
+import { logActivity } from '../utils/activityLogger';
 
 export const adjustStock = async (req: Request, res: Response) => {
   try {
@@ -33,6 +34,7 @@ export const adjustStock = async (req: Request, res: Response) => {
       return { adjustment, product };
     });
 
+    await logActivity(`STOCK_${adjustmentType}`, 'Stock', result.adjustment.id, `Stock ${adjustmentType} of ${quantity} for product ID ${productId}`);
     res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
+import { logActivity } from '../utils/activityLogger';
 
 export const createTransaction = async (req: Request, res: Response) => {
   try {
@@ -69,6 +70,7 @@ export const createTransaction = async (req: Request, res: Response) => {
       return transaction;
     });
 
+    await logActivity('TRANSACTION', 'Transaction', result.id, `Completed transaction ${invoiceNumber} for Rp ${totalAmount}`);
     res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
