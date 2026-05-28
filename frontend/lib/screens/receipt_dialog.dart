@@ -65,7 +65,14 @@ class ReceiptWidget extends StatelessWidget {
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
+    final String invoiceNumber = transaction['invoiceNumber'] ?? 'INV';
+    final String timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final String fileName = 'Struk_${invoiceNumber}_$timestamp';
+
+    await Printing.layoutPdf(
+      name: fileName,
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
   }
 
   @override
