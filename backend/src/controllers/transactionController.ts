@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middlewares/authMiddleware';
 import prisma from '../config/prisma';
 import { logActivity } from '../utils/activityLogger';
 
-export const createTransaction = async (req: Request, res: Response) => {
+export const createTransaction = async (req: AuthRequest, res: Response) => {
   try {
     const { paymentMethod, items } = req.body;
     
@@ -10,6 +11,17 @@ export const createTransaction = async (req: Request, res: Response) => {
     
     if (!items || items.length === 0) {
       return res.status(400).json({ error: 'Transaction must have at least one item' });
+    }
+
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+    const shift = await prisma.shift.findFirst({
+      where: { userId, status: 'OPEN' }
+    });
+
+    if (!shift) {
+      return res.status(400).json({ error: 'You must open a shift before making transactions' });
     }
 
     // Calculate total
@@ -36,6 +48,8 @@ export const createTransaction = async (req: Request, res: Response) => {
           invoiceNumber,
           totalAmount,
           paymentMethod: paymentMethod || 'CASH',
+          cashierId: userId,
+          shiftId: shift.id,
           details: {
             create: details
           }
@@ -80,7 +94,11 @@ export const createTransaction = async (req: Request, res: Response) => {
 export const getTransactions = async (req: Request, res: Response) => {
   try {
     const transactions = await prisma.transaction.findMany({
-      include: { details: { include: { product: true } } },
+      include: { 
+        details: { include: { product: true } },
+        cashier: { select: { username: true } },
+        voidAuthorizer: { select: { username: true } }
+      },
       orderBy: { createdAt: 'desc' }
     });
     res.json(transactions);
@@ -88,3 +106,77 @@ export const getTransactions = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const voidTransaction = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { pin } = req.body;
+    const user = req.user!;
+
+    let authorizerId = null;
+
+    if (user.role === 'ADMIN') {
+      authorizerId = user.id;
+    } else {
+      if (!pin) return res.status(403).json({ error: 'Admin PIN required to void transaction' });
+      
+      const adminUser = await prisma.user.findFirst({
+        where: { role: 'ADMIN', pin: { not: null } }
+      });
+
+      if (!adminUser || !adminUser.pin) {
+        return res.status(400).json({ error: 'No admin PIN configured' });
+      }
+
+      const bcrypt = await import('bcrypt');
+      const validPin = await bcrypt.compare(pin, adminUser.pin!);
+      if (!validPin) return res.status(403).json({ error: 'Invalid PIN' });
+
+      authorizerId = adminUser.id;
+    }
+
+    await processVoid(Number(id), authorizerId, res);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+async function processVoid(transactionId: number, authorizerId: number, res: Response) {
+  try {
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: transactionId },
+      include: { details: true }
+    });
+
+    if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+    if (transaction.status === 'VOID') return res.status(400).json({ error: 'Transaction is already voided' });
+
+    const result = await prisma.$transaction(async (tx) => {
+      const voided = await tx.transaction.update({
+        where: { id: transactionId },
+        data: {
+          status: 'VOID',
+          voidAuthorizedBy: authorizerId
+        }
+      });
+
+      // Restore stock
+      for (const item of transaction.details) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            currentStock: {
+              increment: item.quantity
+            }
+          }
+        });
+      }
+      return voided;
+    });
+
+    await logActivity('VOID_TRANSACTION', 'Transaction', result.id, `Voided transaction ${transaction.invoiceNumber}`);
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}

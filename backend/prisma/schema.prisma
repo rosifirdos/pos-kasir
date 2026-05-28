@@ -44,13 +44,22 @@ model Product {
 }
 
 model Transaction {
-  id             Int                 @id @default(autoincrement())
-  invoiceNumber  String              @unique
-  totalAmount    Decimal             @db.Decimal(10, 2)
-  paymentMethod  String              @default("CASH")
-  createdAt      DateTime            @default(now())
+  id               Int                 @id @default(autoincrement())
+  invoiceNumber    String              @unique
+  totalAmount      Decimal             @db.Decimal(10, 2)
+  paymentMethod    String              @default("CASH")
+  status           String              @default("COMPLETED") // "COMPLETED" or "VOID"
+  createdAt        DateTime            @default(now())
   
-  details        TransactionDetail[]
+  cashierId        Int?
+  shiftId          Int?
+  voidAuthorizedBy Int?
+
+  cashier          User?               @relation("CashierTransactions", fields: [cashierId], references: [id])
+  shift            Shift?              @relation(fields: [shiftId], references: [id])
+  voidAuthorizer   User?               @relation("VoidAuthorizedBy", fields: [voidAuthorizedBy], references: [id])
+
+  details          TransactionDetail[]
 
   @@map("transactions")
 }
@@ -91,4 +100,36 @@ model ActivityLog {
   createdAt   DateTime @default(now())
 
   @@map("activity_logs")
+}
+
+model User {
+  id               Int           @id @default(autoincrement())
+  username         String        @unique
+  passwordHash     String
+  role             String        @default("KASIR") // "ADMIN" or "KASIR"
+  pin              String?       // Hashed PIN for Admin
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  shifts           Shift[]
+  transactions     Transaction[] @relation("CashierTransactions")
+  voidTransactions Transaction[] @relation("VoidAuthorizedBy")
+
+  @@map("users")
+}
+
+model Shift {
+  id           Int           @id @default(autoincrement())
+  userId       Int
+  startTime    DateTime      @default(now())
+  endTime      DateTime?
+  startingCash Decimal       @db.Decimal(10, 2)
+  expectedCash Decimal?      @db.Decimal(10, 2)
+  actualCash   Decimal?      @db.Decimal(10, 2)
+  status       String        @default("OPEN") // "OPEN" or "CLOSED"
+  
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@map("shifts")
 }

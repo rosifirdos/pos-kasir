@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/cart_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/product.dart';
 import '../models/cart_item.dart';
 import '../services/api_service.dart';
@@ -9,6 +10,8 @@ import 'admin_screen.dart';
 import 'dashboard_screen.dart';
 import 'receipt_dialog.dart';
 import 'history_screen.dart';
+import 'shift_dialog.dart';
+import 'employee_screen.dart';
 import 'package:intl/intl.dart';
 
 final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -24,12 +27,27 @@ class _PosScreenState extends State<PosScreen> {
   String _searchQuery = '';
   int? _selectedCategoryId;
 
+  bool _hasActiveShift = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkShift();
       Provider.of<ProductProvider>(context, listen: false).fetchData();
     });
+  }
+
+  Future<void> _checkShift() async {
+    final api = ApiService();
+    final shift = await api.getActiveShift();
+    if (shift == null && mounted) {
+      ShiftDialog.showOpenShift(context, () {
+        setState(() => _hasActiveShift = true);
+      });
+    } else {
+      setState(() => _hasActiveShift = true);
+    }
   }
 
   void _processCheckout(BuildContext context, String paymentMethod) async {
@@ -98,10 +116,13 @@ class _PosScreenState extends State<PosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+    final isAdmin = auth.isAdmin;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('POS Kasir Modern', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('POS Kasir Modern - ${auth.user?['username'] ?? ''}', style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.indigo.shade900,
         elevation: 0,
@@ -113,24 +134,52 @@ class _PosScreenState extends State<PosScreen> {
               Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryScreen()));
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.bar_chart_rounded),
-            tooltip: 'Dashboard Bisnis',
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const DashboardScreen()));
+          if (isAdmin)
+            IconButton(
+              icon: const Icon(Icons.people_alt_rounded),
+              tooltip: 'Manajemen Pegawai',
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const EmployeeScreen()));
+              },
+            ),
+          if (isAdmin)
+            IconButton(
+              icon: const Icon(Icons.bar_chart_rounded),
+              tooltip: 'Dashboard Bisnis',
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const DashboardScreen()));
+              },
+            ),
+          if (isAdmin)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings_rounded),
+              tooltip: 'Manajemen Toko',
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminScreen()));
+              },
+            ),
+          PopupMenuButton<String>(
+            onSelected: (val) {
+              if (val == 'close_shift') {
+                ShiftDialog.showCloseShift(context, () {
+                  setState(() => _hasActiveShift = false);
+                  auth.logout();
+                });
+              } else if (val == 'logout') {
+                auth.logout();
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'close_shift', child: Text('Tutup Shift & Keluar')),
+              const PopupMenuItem(value: 'logout', child: Text('Keluar (Tanpa Tutup Shift)')),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.admin_panel_settings_rounded),
-            tooltip: 'Manajemen Toko',
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminScreen()));
-            },
-          ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Row(
+      body: !_hasActiveShift 
+          ? const Center(child: CircularProgressIndicator()) 
+          : Row(
         children: [
           // Kiri: Katalog
           Expanded(

@@ -8,6 +8,10 @@ import transactionRoutes from './routes/transactionRoutes';
 import stockRoutes from './routes/stockRoutes';
 import reportRoutes from './routes/reportRoutes';
 import activityRoutes from './routes/activityRoutes';
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+import shiftRoutes from './routes/shiftRoutes';
+import { authenticateToken } from './middlewares/authMiddleware';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,12 +24,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
 
-app.use('/api/categories', categoryRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/stocks', stockRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/activities', activityRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/shifts', shiftRoutes);
+
+app.use('/api/categories', authenticateToken, categoryRoutes);
+app.use('/api/products', authenticateToken, productRoutes);
+app.use('/api/transactions', transactionRoutes); // Transaction routes use authenticateToken internally
+app.use('/api/stocks', authenticateToken, stockRoutes);
+app.use('/api/reports', authenticateToken, reportRoutes);
+app.use('/api/activities', authenticateToken, activityRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
