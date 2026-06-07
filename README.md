@@ -8,20 +8,32 @@ Aplikasi ini didesain tangguh berjalan pada jaringan lokal (jaringan server loka
 
 ## 🚀 Fitur Utama
 
-### 1. Modul Kasir (Point of Sale)
+### 1. Otentikasi & Keamanan (RBAC)
+* **Multi-Role User:** Pembagian peran pengguna antara `ADMIN` (pemilik toko/manajer) dan `KASIR` (staf operasional).
+* **Otentikasi Aman:** Sistem login aman menggunakan enkripsi *password* (`bcrypt`) dan token otorisasi (`JWT`).
+* **Pembatasan Hak Akses (Authorization):** Kasir hanya memiliki akses ke modul penjualan dan manajemen shift mandiri, sementara Admin memegang kontrol penuh atas data produk, stok, laporan laba rugi, dan manajemen akun karyawan.
+
+### 2. Modul Kasir (Point of Sale)
 * **Katalog Produk Cepat:** Filter produk berdasarkan kategori dan pencarian instan (*search-as-you-type*).
 * **Keranjang Belanja Dinamis:** Tambah, kurangi, hapus item, dan edit jumlah item di keranjang dengan kalkulasi subtotal dan total harga secara otomatis.
 * **Metode Pembayaran:** Pilihan metode pembayaran `CASH` dan `DEBIT` dengan input nominal pembayaran dan hitung kembalian presisi.
 * **Struk Digital (Simulasi Cetak):** Generate struk digital instan setelah transaksi sukses, dengan fitur ekspor ke PDF atau cetak langsung menggunakan printer lokal.
+* **Otorisasi PIN Admin (Override Protocol):** Pembatalan (*void*) transaksi kasir membutuhkan input PIN dari Admin langsung di layar kasir secara *on-the-fly* untuk mencegah manipulasi data.
 
-### 2. Manajemen Stok & Inventaris
-* **Pengurangan Stok Otomatis:** Pengurangan stok dilakukan menggunakan skema *Interactive Transaction* di database untuk menjamin integritas data (ACID Compliance).
-* **Manajemen Master Data:** Fitur CRUD (*Create, Read, Update, Delete*) Kategori dan Produk (termasuk upload gambar, SKU, harga beli, harga jual, dan stok awal).
+### 3. Manajemen Shift Kerja
+* **Buka Shift:** Kasir memasukkan jumlah modal uang kas awal sebelum melayani transaksi penjualan.
+* **Tutup Shift:** Kasir menginput jumlah uang fisik yang ada di laci kasir pada akhir shift untuk rekonsiliasi dengan pencatatan otomatis sistem (*expected cash*).
+* **Riwayat Shift:** Admin dapat melihat histori pembukaan dan penutupan shift semua karyawan beserta selisih kasnya.
+
+### 4. Manajemen Stok & Inventaris
+* **Pengurangan Stok Otomatis:** Pengurangan stok dilakukan menggunakan skema *Interactive Transaction* di database untuk menjamin integritas data (ACID Compliance) saat transaksi diselesaikan.
+* **Manajemen Master Data:** Fitur CRUD (*Create, Read, Update, Delete*) Kategori dan Produk (termasuk upload gambar, SKU, harga beli/HPP, harga jual, dan stok awal).
 * **Penyesuaian Stok (Restock):** Pencatatan riwayat restok barang masuk/keluar di luar transaksi kasir.
 * **Indikator Stok Tipis:** Notifikasi visual (badge merah) ketika jumlah stok berada di bawah batas minimum (≤ 5 item).
 
-### 3. Dashboard Bisnis
-* Ringkasan performa harian (total pendapatan, total transaksi, margin keuntungan, dan produk terlaris).
+### 5. Dashboard Bisnis & Audit Trail
+* **Ringkasan Performa:** Dashboard harian untuk melihat total pendapatan, jumlah transaksi, margin keuntungan (laba kotor), dan produk terlaris.
+* **Log Aktivitas (Audit Trail):** Pencatatan riwayat aktivitas penting (penghapusan produk, modifikasi stok, void transaksi) untuk keperluan pengawasan internal.
 
 ---
 
@@ -30,14 +42,14 @@ Aplikasi ini didesain tangguh berjalan pada jaringan lokal (jaringan server loka
 ### Frontend (Klien)
 * **Framework:** Flutter (Android / Windows Desktop)
 * **State Management:** Provider
-* **Desain UI:** Material Design 3 (Clean & Modern Layout)
+* **Desain UI:** Material Design 3 (Clean & Modern Layout) dengan Google Fonts (Inter)
 * **Libraries Utama:** `http` (API integration), `pdf` & `printing` (receipt generation & printer integration), `intl` (formatting).
 
 ### Backend (Server API)
 * **Runtime:** Node.js (TypeScript)
 * **Framework:** Express.js
 * **Database Client:** Prisma ORM
-* **Libraries Utama:** `cors`, `multer` (upload file/gambar), `dotenv`.
+* **Libraries Utama:** `jsonwebtoken` (JWT), `bcrypt` (password hashing), `cors`, `multer` (upload file/gambar), `dotenv`.
 
 ### Database
 * **DBMS:** PostgreSQL
@@ -47,7 +59,7 @@ Aplikasi ini didesain tangguh berjalan pada jaringan lokal (jaringan server loka
 ## 💻 Cara Menjalankan Proyek
 
 ### Prasyarat (Prerequisites)
-Sebelum menjalankan, pastikan Anda telah menginstal:
+Before running, pastikan Anda telah menginstal:
 * [Node.js](https://nodejs.org/) (versi 18+)
 * [Flutter SDK](https://docs.flutter.dev/get-started/install) (versi 3.0+)
 * [PostgreSQL](https://www.postgresql.org/) running secara lokal.
@@ -56,7 +68,7 @@ Sebelum menjalankan, pastikan Anda telah menginstal:
 
 ### Langkah 1: Setup & Jalankan Database
 1. Buat database baru di PostgreSQL lokal Anda bernama `pos_db`.
-2. Pastikan port PostgreSQL berjalan sesuai konfigurasi (default: `5433` atau ubah di konfigurasi backend).
+2. Pastikan port PostgreSQL berjalan sesuai konfigurasi (default: `5432` atau ubah di konfigurasi backend).
 
 ---
 
@@ -67,7 +79,7 @@ Sebelum menjalankan, pastikan Anda telah menginstal:
    ```
 2. Salin atau buat file konfigurasi `.env` dan sesuaikan URL database Anda:
    ```env
-   DATABASE_URL="postgresql://username:password@localhost:5433/pos_db?schema=public"
+   DATABASE_URL="postgresql://username:password@localhost:5432/pos_db?schema=public"
    PORT=3000
    ```
 3. Install dependensi:
