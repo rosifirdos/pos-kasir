@@ -7,6 +7,9 @@ async function main() {
 
   // Delete existing data to prevent unique constraint violations on re-seed
   // Order of deletion matters due to foreign key constraints
+  await prisma.recipe.deleteMany();
+  await prisma.rawMaterial.deleteMany();
+  await prisma.unit.deleteMany();
   await prisma.promoItem.deleteMany();
   await prisma.promo.deleteMany();
   await prisma.transactionDetail.deleteMany();
@@ -16,6 +19,30 @@ async function main() {
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
 
+  // Create Units
+  const unitGram = await prisma.unit.create({ data: { name: 'Gram', abbreviation: 'g' } });
+  const unitMl = await prisma.unit.create({ data: { name: 'Milliliter', abbreviation: 'ml' } });
+  const unitPcs = await prisma.unit.create({ data: { name: 'Piece', abbreviation: 'pcs' } });
+  const unitSlice = await prisma.unit.create({ data: { name: 'Slice', abbreviation: 'slice' } });
+
+  // Create Raw Materials
+  const rmCoffeeBeans = await prisma.rawMaterial.create({ data: { name: 'Biji Kopi Arabica', unitId: unitGram.id, stockQuantity: 5000, minimumStock: 1000, costPerUnit: 200 } });
+  const rmMilk = await prisma.rawMaterial.create({ data: { name: 'Susu UHT', unitId: unitMl.id, stockQuantity: 10000, minimumStock: 2000, costPerUnit: 20 } });
+  const rmWater = await prisma.rawMaterial.create({ data: { name: 'Air Mineral', unitId: unitMl.id, stockQuantity: 50000, minimumStock: 5000, costPerUnit: 1 } });
+  const rmSugarSyrup = await prisma.rawMaterial.create({ data: { name: 'Sirup Gula', unitId: unitMl.id, stockQuantity: 3000, minimumStock: 500, costPerUnit: 30 } });
+  const rmPalmSugar = await prisma.rawMaterial.create({ data: { name: 'Gula Aren Cair', unitId: unitMl.id, stockQuantity: 3000, minimumStock: 500, costPerUnit: 40 } });
+  const rmIce = await prisma.rawMaterial.create({ data: { name: 'Es Batu', unitId: unitPcs.id, stockQuantity: 500, minimumStock: 100, costPerUnit: 500 } });
+  const rmMatcha = await prisma.rawMaterial.create({ data: { name: 'Bubuk Matcha', unitId: unitGram.id, stockQuantity: 2000, minimumStock: 500, costPerUnit: 300 } });
+  const rmTea = await prisma.rawMaterial.create({ data: { name: 'Daun Teh', unitId: unitGram.id, stockQuantity: 2000, minimumStock: 500, costPerUnit: 100 } });
+  const rmVanillaSyrup = await prisma.rawMaterial.create({ data: { name: 'Sirup Vanila', unitId: unitMl.id, stockQuantity: 3000, minimumStock: 500, costPerUnit: 50 } });
+  const rmChocolatePowder = await prisma.rawMaterial.create({ data: { name: 'Bubuk Cokelat', unitId: unitGram.id, stockQuantity: 2000, minimumStock: 500, costPerUnit: 250 } });
+  const rmPeachSyrup = await prisma.rawMaterial.create({ data: { name: 'Sirup Persik', unitId: unitMl.id, stockQuantity: 2000, minimumStock: 500, costPerUnit: 60 } });
+  const rmSpaghetti = await prisma.rawMaterial.create({ data: { name: 'Pasta Spaghetti', unitId: unitGram.id, stockQuantity: 5000, minimumStock: 1000, costPerUnit: 10 } });
+  const rmCarbonaraSauce = await prisma.rawMaterial.create({ data: { name: 'Saus Carbonara', unitId: unitMl.id, stockQuantity: 5000, minimumStock: 1000, costPerUnit: 30 } });
+  const rmSmokedBeef = await prisma.rawMaterial.create({ data: { name: 'Daging Asap', unitId: unitPcs.id, stockQuantity: 200, minimumStock: 50, costPerUnit: 1500 } });
+  const rmRoti = await prisma.rawMaterial.create({ data: { name: 'Roti Slice', unitId: unitSlice.id, stockQuantity: 100, minimumStock: 20, costPerUnit: 500 } });
+  const rmKeju = await prisma.rawMaterial.create({ data: { name: 'Keju Cheddar Slice', unitId: unitSlice.id, stockQuantity: 100, minimumStock: 20, costPerUnit: 1000 } });
+  
   // Create Categories
   const catCoffee = await prisma.category.create({ data: { name: 'Coffee & Espresso' } });
   const catNonCoffee = await prisma.category.create({ data: { name: 'Non-Coffee Beverages' } });
@@ -25,66 +52,97 @@ async function main() {
   const catSnacks = await prisma.category.create({ data: { name: 'Snacks & Bites' } });
 
   // Create Products
+  const espressoSingle = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-001', name: 'Espresso Single Shot', buyPrice: 4000, sellPrice: 15000, currentStock: 0, isRecipeBased: true } });
+  const icedLatte = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-008', name: 'Iced Caffe Latte', buyPrice: 10000, sellPrice: 30000, currentStock: 0, isRecipeBased: true } });
+  const kopiSusu = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-012', name: 'Kopi Susu Gula Aren', buyPrice: 8000, sellPrice: 25000, currentStock: 0, isRecipeBased: true } });
+  const icedMatcha = await prisma.product.create({ data: { categoryId: catNonCoffee.id, sku: 'NCF-002', name: 'Iced Matcha Latte', buyPrice: 12000, sellPrice: 32000, currentStock: 0, isRecipeBased: true } });
+  const icedTea = await prisma.product.create({ data: { categoryId: catTea.id, sku: 'TEA-006', name: 'Iced Lemon Tea', buyPrice: 5000, sellPrice: 20000, currentStock: 0, isRecipeBased: true } });
+  
+  // 7 New Products (Recipe-Based)
+  const icedAmericano = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-015', name: 'Iced Americano', buyPrice: 5000, sellPrice: 20000, currentStock: 0, isRecipeBased: true } });
+  const cappuccino = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-016', name: 'Cappuccino', buyPrice: 8000, sellPrice: 28000, currentStock: 0, isRecipeBased: true } });
+  const vanillaLatte = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-017', name: 'Vanilla Latte', buyPrice: 9500, sellPrice: 30000, currentStock: 0, isRecipeBased: true } });
+  const icedChocolate = await prisma.product.create({ data: { categoryId: catNonCoffee.id, sku: 'NCF-005', name: 'Iced Chocolate', buyPrice: 9000, sellPrice: 28000, currentStock: 0, isRecipeBased: true } });
+  const peachEarlGrey = await prisma.product.create({ data: { categoryId: catTea.id, sku: 'TEA-008', name: 'Peach Earl Grey Tea', buyPrice: 6500, sellPrice: 24000, currentStock: 0, isRecipeBased: true } });
+  const spaghettiCarbonara = await prisma.product.create({ data: { categoryId: catMainCourse.id, sku: 'MNC-005', name: 'Spaghetti Carbonara', buyPrice: 18000, sellPrice: 42000, currentStock: 0, isRecipeBased: true } });
+  const smokedBeefSandwich = await prisma.product.create({ data: { categoryId: catSnacks.id, sku: 'SNK-005', name: 'Smoked Beef Sandwich', buyPrice: 8000, sellPrice: 25000, currentStock: 0, isRecipeBased: true } });
+
+  // Non-recipe items
   await prisma.product.createMany({
     data: [
-      // Coffee & Espresso
-      { categoryId: catCoffee.id, sku: 'COF-001', name: 'Espresso Single Shot', buyPrice: 5000, sellPrice: 15000, currentStock: 100 },
-      { categoryId: catCoffee.id, sku: 'COF-002', name: 'Espresso Double Shot', buyPrice: 8000, sellPrice: 20000, currentStock: 100 },
-      { categoryId: catCoffee.id, sku: 'COF-003', name: 'Americano Hot', buyPrice: 6000, sellPrice: 22000, currentStock: 150 },
-      { categoryId: catCoffee.id, sku: 'COF-004', name: 'Iced Americano', buyPrice: 7000, sellPrice: 24000, currentStock: 150 },
-      { categoryId: catCoffee.id, sku: 'COF-005', name: 'Cappuccino Hot', buyPrice: 10000, sellPrice: 28000, currentStock: 80 },
-      { categoryId: catCoffee.id, sku: 'COF-006', name: 'Iced Cappuccino', buyPrice: 12000, sellPrice: 30000, currentStock: 80 },
-      { categoryId: catCoffee.id, sku: 'COF-007', name: 'Caffe Latte Hot', buyPrice: 10000, sellPrice: 28000, currentStock: 120 },
-      { categoryId: catCoffee.id, sku: 'COF-008', name: 'Iced Caffe Latte', buyPrice: 12000, sellPrice: 30000, currentStock: 120 },
-      { categoryId: catCoffee.id, sku: 'COF-009', name: 'Caramel Macchiato', buyPrice: 14000, sellPrice: 35000, currentStock: 60 },
-      { categoryId: catCoffee.id, sku: 'COF-010', name: 'Vanilla Latte', buyPrice: 13000, sellPrice: 33000, currentStock: 70 },
-      { categoryId: catCoffee.id, sku: 'COF-011', name: 'Hazelnut Latte', buyPrice: 13000, sellPrice: 33000, currentStock: 70 },
-      { categoryId: catCoffee.id, sku: 'COF-012', name: 'Kopi Susu Gula Aren', buyPrice: 10000, sellPrice: 25000, currentStock: 200 },
-
-      // Non-Coffee Beverages
-      { categoryId: catNonCoffee.id, sku: 'NCF-001', name: 'Matcha Latte Hot', buyPrice: 12000, sellPrice: 30000, currentStock: 90 },
-      { categoryId: catNonCoffee.id, sku: 'NCF-002', name: 'Iced Matcha Latte', buyPrice: 14000, sellPrice: 32000, currentStock: 90 },
-      { categoryId: catNonCoffee.id, sku: 'NCF-003', name: 'Taro Latte Hot', buyPrice: 11000, sellPrice: 28000, currentStock: 60 },
-      { categoryId: catNonCoffee.id, sku: 'NCF-004', name: 'Iced Taro Latte', buyPrice: 13000, sellPrice: 30000, currentStock: 60 },
-      { categoryId: catNonCoffee.id, sku: 'NCF-005', name: 'Chocolate Classic Hot', buyPrice: 12000, sellPrice: 28000, currentStock: 80 },
-      { categoryId: catNonCoffee.id, sku: 'NCF-006', name: 'Iced Chocolate Classic', buyPrice: 14000, sellPrice: 30000, currentStock: 80 },
-      { categoryId: catNonCoffee.id, sku: 'NCF-007', name: 'Red Velvet Latte', buyPrice: 12000, sellPrice: 30000, currentStock: 50 },
-
-      // Tea & Mocktails
-      { categoryId: catTea.id, sku: 'TEA-001', name: 'English Breakfast Tea', buyPrice: 5000, sellPrice: 18000, currentStock: 100 },
-      { categoryId: catTea.id, sku: 'TEA-002', name: 'Earl Grey Tea', buyPrice: 6000, sellPrice: 20000, currentStock: 100 },
-      { categoryId: catTea.id, sku: 'TEA-003', name: 'Chamomile Tea', buyPrice: 6000, sellPrice: 22000, currentStock: 80 },
-      { categoryId: catTea.id, sku: 'TEA-004', name: 'Iced Lychee Tea', buyPrice: 9000, sellPrice: 25000, currentStock: 120 },
-      { categoryId: catTea.id, sku: 'TEA-005', name: 'Iced Peach Tea', buyPrice: 9000, sellPrice: 25000, currentStock: 120 },
-      { categoryId: catTea.id, sku: 'TEA-006', name: 'Iced Lemon Tea', buyPrice: 7000, sellPrice: 20000, currentStock: 150 },
-      { categoryId: catTea.id, sku: 'TEA-007', name: 'Virgin Mojito Mocktail', buyPrice: 12000, sellPrice: 32000, currentStock: 50 },
-      { categoryId: catTea.id, sku: 'TEA-008', name: 'Sunset Paradise Mocktail', buyPrice: 14000, sellPrice: 35000, currentStock: 40 },
-
-      // Pastry & Bakery
-      { categoryId: catPastry.id, sku: 'PST-001', name: 'Butter Croissant', buyPrice: 12000, sellPrice: 22000, currentStock: 30 },
-      { categoryId: catPastry.id, sku: 'PST-002', name: 'Almond Croissant', buyPrice: 15000, sellPrice: 28000, currentStock: 20 },
-      { categoryId: catPastry.id, sku: 'PST-003', name: 'Pain au Chocolat', buyPrice: 14000, sellPrice: 26000, currentStock: 25 },
-      { categoryId: catPastry.id, sku: 'PST-004', name: 'Cinnamon Roll', buyPrice: 13000, sellPrice: 25000, currentStock: 20 },
-      { categoryId: catPastry.id, sku: 'PST-005', name: 'New York Cheesecake', buyPrice: 20000, sellPrice: 38000, currentStock: 15 },
-      { categoryId: catPastry.id, sku: 'PST-006', name: 'Red Velvet Slice', buyPrice: 18000, sellPrice: 35000, currentStock: 15 },
-      { categoryId: catPastry.id, sku: 'PST-007', name: 'Fudgy Brownie', buyPrice: 10000, sellPrice: 20000, currentStock: 30 },
-
-      // Main Course
-      { categoryId: catMainCourse.id, sku: 'MNC-001', name: 'Nasi Goreng Spesial', buyPrice: 20000, sellPrice: 38000, currentStock: 40 },
-      { categoryId: catMainCourse.id, sku: 'MNC-002', name: 'Spaghetti Aglio Olio', buyPrice: 18000, sellPrice: 42000, currentStock: 30 },
-      { categoryId: catMainCourse.id, sku: 'MNC-003', name: 'Spaghetti Carbonara', buyPrice: 22000, sellPrice: 45000, currentStock: 30 },
-      { categoryId: catMainCourse.id, sku: 'MNC-004', name: 'Chicken Cordon Bleu', buyPrice: 25000, sellPrice: 55000, currentStock: 20 },
-      { categoryId: catMainCourse.id, sku: 'MNC-005', name: 'Beef Rice Bowl', buyPrice: 22000, sellPrice: 48000, currentStock: 35 },
-      { categoryId: catMainCourse.id, sku: 'MNC-006', name: 'Chicken Katsu Curry', buyPrice: 20000, sellPrice: 45000, currentStock: 30 },
-
-      // Snacks & Bites
-      { categoryId: catSnacks.id, sku: 'SNK-001', name: 'French Fries', buyPrice: 10000, sellPrice: 22000, currentStock: 50 },
-      { categoryId: catSnacks.id, sku: 'SNK-002', name: 'Truffle Fries', buyPrice: 15000, sellPrice: 32000, currentStock: 40 },
-      { categoryId: catSnacks.id, sku: 'SNK-003', name: 'Chicken Wings (6pcs)', buyPrice: 18000, sellPrice: 38000, currentStock: 30 },
-      { categoryId: catSnacks.id, sku: 'SNK-004', name: 'Onion Rings', buyPrice: 12000, sellPrice: 25000, currentStock: 40 },
-      { categoryId: catSnacks.id, sku: 'SNK-005', name: 'Platter Mix', buyPrice: 25000, sellPrice: 55000, currentStock: 20 },
-      { categoryId: catSnacks.id, sku: 'SNK-006', name: 'Dimsum Ayam (4pcs)', buyPrice: 12000, sellPrice: 24000, currentStock: 40 },
+      { categoryId: catPastry.id, sku: 'PST-001', name: 'Butter Croissant', buyPrice: 12000, sellPrice: 22000, currentStock: 30, isRecipeBased: false },
+      { categoryId: catMainCourse.id, sku: 'MNC-001', name: 'Nasi Goreng Spesial', buyPrice: 20000, sellPrice: 38000, currentStock: 40, isRecipeBased: false },
+      { categoryId: catSnacks.id, sku: 'SNK-001', name: 'French Fries', buyPrice: 10000, sellPrice: 22000, currentStock: 50, isRecipeBased: false },
     ],
+  });
+
+  // Create Recipes
+  await prisma.recipe.createMany({
+    data: [
+      // Espresso Single
+      { productId: espressoSingle.id, rawMaterialId: rmCoffeeBeans.id, quantityNeeded: 18 },
+      { productId: espressoSingle.id, rawMaterialId: rmWater.id, quantityNeeded: 30 },
+      
+      // Iced Caffe Latte
+      { productId: icedLatte.id, rawMaterialId: rmCoffeeBeans.id, quantityNeeded: 18 },
+      { productId: icedLatte.id, rawMaterialId: rmMilk.id, quantityNeeded: 150 },
+      { productId: icedLatte.id, rawMaterialId: rmIce.id, quantityNeeded: 1 }, // 1 scoop / 1 portion
+      
+      // Kopi Susu Gula Aren
+      { productId: kopiSusu.id, rawMaterialId: rmCoffeeBeans.id, quantityNeeded: 18 },
+      { productId: kopiSusu.id, rawMaterialId: rmMilk.id, quantityNeeded: 120 },
+      { productId: kopiSusu.id, rawMaterialId: rmPalmSugar.id, quantityNeeded: 30 },
+      { productId: kopiSusu.id, rawMaterialId: rmIce.id, quantityNeeded: 1 },
+      
+      // Iced Matcha Latte
+      { productId: icedMatcha.id, rawMaterialId: rmMatcha.id, quantityNeeded: 20 },
+      { productId: icedMatcha.id, rawMaterialId: rmMilk.id, quantityNeeded: 150 },
+      { productId: icedMatcha.id, rawMaterialId: rmIce.id, quantityNeeded: 1 },
+
+      // Iced Lemon Tea
+      { productId: icedTea.id, rawMaterialId: rmTea.id, quantityNeeded: 10 },
+      { productId: icedTea.id, rawMaterialId: rmWater.id, quantityNeeded: 200 },
+      { productId: icedTea.id, rawMaterialId: rmSugarSyrup.id, quantityNeeded: 20 },
+      { productId: icedTea.id, rawMaterialId: rmIce.id, quantityNeeded: 1 },
+
+      // 1. Iced Americano
+      { productId: icedAmericano.id, rawMaterialId: rmCoffeeBeans.id, quantityNeeded: 18 },
+      { productId: icedAmericano.id, rawMaterialId: rmWater.id, quantityNeeded: 150 },
+      { productId: icedAmericano.id, rawMaterialId: rmIce.id, quantityNeeded: 1 },
+
+      // 2. Cappuccino
+      { productId: cappuccino.id, rawMaterialId: rmCoffeeBeans.id, quantityNeeded: 18 },
+      { productId: cappuccino.id, rawMaterialId: rmWater.id, quantityNeeded: 30 },
+      { productId: cappuccino.id, rawMaterialId: rmMilk.id, quantityNeeded: 120 },
+
+      // 3. Vanilla Latte
+      { productId: vanillaLatte.id, rawMaterialId: rmCoffeeBeans.id, quantityNeeded: 18 },
+      { productId: vanillaLatte.id, rawMaterialId: rmMilk.id, quantityNeeded: 120 },
+      { productId: vanillaLatte.id, rawMaterialId: rmVanillaSyrup.id, quantityNeeded: 20 },
+      { productId: vanillaLatte.id, rawMaterialId: rmIce.id, quantityNeeded: 1 },
+
+      // 4. Iced Chocolate
+      { productId: icedChocolate.id, rawMaterialId: rmChocolatePowder.id, quantityNeeded: 25 },
+      { productId: icedChocolate.id, rawMaterialId: rmMilk.id, quantityNeeded: 150 },
+      { productId: icedChocolate.id, rawMaterialId: rmSugarSyrup.id, quantityNeeded: 20 },
+      { productId: icedChocolate.id, rawMaterialId: rmIce.id, quantityNeeded: 1 },
+
+      // 5. Peach Earl Grey Tea
+      { productId: peachEarlGrey.id, rawMaterialId: rmTea.id, quantityNeeded: 10 },
+      { productId: peachEarlGrey.id, rawMaterialId: rmWater.id, quantityNeeded: 200 },
+      { productId: peachEarlGrey.id, rawMaterialId: rmPeachSyrup.id, quantityNeeded: 25 },
+      { productId: peachEarlGrey.id, rawMaterialId: rmIce.id, quantityNeeded: 1 },
+
+      // 6. Spaghetti Carbonara
+      { productId: spaghettiCarbonara.id, rawMaterialId: rmSpaghetti.id, quantityNeeded: 100 },
+      { productId: spaghettiCarbonara.id, rawMaterialId: rmCarbonaraSauce.id, quantityNeeded: 100 },
+      { productId: spaghettiCarbonara.id, rawMaterialId: rmSmokedBeef.id, quantityNeeded: 3 },
+
+      // 7. Smoked Beef Sandwich
+      { productId: smokedBeefSandwich.id, rawMaterialId: rmRoti.id, quantityNeeded: 2 },
+      { productId: smokedBeefSandwich.id, rawMaterialId: rmKeju.id, quantityNeeded: 1 },
+      { productId: smokedBeefSandwich.id, rawMaterialId: rmSmokedBeef.id, quantityNeeded: 2 },
+    ]
   });
 
   console.log('Seed data successfully inserted.');
