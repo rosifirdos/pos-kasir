@@ -17,6 +17,7 @@ export const getProducts = async (req: Request, res: Response) => {
     const productsWithVirtualStock = products.map((product) => {
       if (product.isRecipeBased && product.recipes.length > 0) {
         let maxPortions = Infinity;
+        let totalCost = 0;
         for (const recipe of product.recipes) {
            const needed = Number(recipe.quantityNeeded);
            if (needed > 0) {
@@ -25,11 +26,13 @@ export const getProducts = async (req: Request, res: Response) => {
              if (portions < maxPortions) {
                maxPortions = portions;
              }
+             totalCost += needed * Number(recipe.rawMaterial.costPerUnit);
            }
         }
         return {
           ...product,
-          currentStock: maxPortions === Infinity ? 0 : maxPortions
+          currentStock: maxPortions === Infinity ? 0 : maxPortions,
+          buyPrice: totalCost
         };
       }
       return product;

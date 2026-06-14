@@ -9,6 +9,7 @@ class Product {
   final double buyPrice;
   final double sellPrice;
   final int currentStock;
+  final bool isRecipeBased;
   final Category? category;
 
   Product({
@@ -20,6 +21,7 @@ class Product {
     required this.buyPrice,
     required this.sellPrice,
     required this.currentStock,
+    this.isRecipeBased = false,
     this.category,
   });
 
@@ -33,6 +35,7 @@ class Product {
       buyPrice: double.parse(json['buyPrice'].toString()),
       sellPrice: double.parse(json['sellPrice'].toString()),
       currentStock: json['currentStock'],
+      isRecipeBased: json['isRecipeBased'] ?? false,
       category: json['category'] != null ? Category.fromJson(json['category']) : null,
     );
   }

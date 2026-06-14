@@ -192,7 +192,18 @@ class _AdminScreenState extends State<AdminScreen> {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Expanded(child: TextField(controller: buyPriceCtrl, decoration: const InputDecoration(labelText: 'Harga Beli (Rp)', prefixText: 'Rp '), keyboardType: TextInputType.number)),
+                          Expanded(
+                            child: TextField(
+                              controller: buyPriceCtrl,
+                              readOnly: isEdit && product.isRecipeBased,
+                              decoration: InputDecoration(
+                                labelText: isEdit && product.isRecipeBased ? 'Harga Modal (Resep)' : 'Harga Beli (Rp)',
+                                prefixText: 'Rp ',
+                                helperText: isEdit && product.isRecipeBased ? 'Dihitung dari bahan baku' : null,
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
                           const SizedBox(width: 16),
                           Expanded(child: TextField(controller: sellPriceCtrl, decoration: const InputDecoration(labelText: 'Harga Jual (Rp)', prefixText: 'Rp '), keyboardType: TextInputType.number)),
                         ],
@@ -489,7 +500,7 @@ class _AdminScreenState extends State<AdminScreen> {
                         columns: const [
                           DataColumn(label: Text('Produk', style: TextStyle(fontWeight: FontWeight.bold))),
                           DataColumn(label: Text('Kategori', style: TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(label: Text('Harga Beli', style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Harga Modal/Beli', style: TextStyle(fontWeight: FontWeight.bold))),
                           DataColumn(label: Text('Harga Jual', style: TextStyle(fontWeight: FontWeight.bold))),
                           DataColumn(label: Text('Stok', style: TextStyle(fontWeight: FontWeight.bold))),
                           DataColumn(label: Text('Aksi', style: TextStyle(fontWeight: FontWeight.bold))),
