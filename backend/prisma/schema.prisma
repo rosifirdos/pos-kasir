@@ -39,6 +39,7 @@ model Product {
   category         Category           @relation(fields: [categoryId], references: [id])
   transactionItems TransactionDetail[]
   stockAdjustments StockAdjustment[]
+  promoItems       PromoItem[]
 
   @@map("products")
 }
@@ -47,6 +48,7 @@ model Transaction {
   id               Int                 @id @default(autoincrement())
   invoiceNumber    String              @unique
   totalAmount      Decimal             @db.Decimal(10, 2)
+  discountAmount   Decimal             @default(0) @db.Decimal(10, 2)
   paymentMethod    String              @default("CASH")
   status           String              @default("COMPLETED") // "COMPLETED" or "VOID"
   createdAt        DateTime            @default(now())
@@ -54,10 +56,12 @@ model Transaction {
   cashierId        Int?
   shiftId          Int?
   voidAuthorizedBy Int?
+  promoId          Int?
 
   cashier          User?               @relation("CashierTransactions", fields: [cashierId], references: [id])
   shift            Shift?              @relation(fields: [shiftId], references: [id])
   voidAuthorizer   User?               @relation("VoidAuthorizedBy", fields: [voidAuthorizedBy], references: [id])
+  promo            Promo?              @relation(fields: [promoId], references: [id])
 
   details          TransactionDetail[]
 
@@ -70,10 +74,13 @@ model TransactionDetail {
   productId     Int
   quantity      Int
   unitPrice     Decimal     @db.Decimal(10, 2)
+  discountAmount Decimal     @default(0) @db.Decimal(10, 2)
   subtotal      Decimal     @db.Decimal(10, 2)
+  promoId       Int?
 
   transaction   Transaction @relation(fields: [transactionId], references: [id])
   product       Product     @relation(fields: [productId], references: [id])
+  promo         Promo?      @relation(fields: [promoId], references: [id])
 
   @@map("transaction_details")
 }
@@ -132,4 +139,41 @@ model Shift {
   transactions Transaction[]
 
   @@map("shifts")
+}
+
+model Promo {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  description        String?
+  type               String              // 'PERCENTAGE', 'FIXED_AMOUNT', 'BOGO', 'HAPPY_HOUR'
+  value              Decimal             @db.Decimal(10, 2)
+  maxDiscount        Decimal?            @db.Decimal(10, 2)
+  minPurchase        Decimal?            @db.Decimal(10, 2)
+  startDate          DateTime?
+  endDate            DateTime?
+  startTime          String?             // e.g. "14:00"
+  endTime            String?             // e.g. "17:00"
+  quota              Int?
+  usedCount          Int                 @default(0)
+  isActive           Boolean             @default(true)
+  isStackable        Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  promoItems         PromoItem[]
+  transactions       Transaction[]
+  transactionDetails TransactionDetail[]
+
+  @@map("promos")
+}
+
+model PromoItem {
+  id        Int     @id @default(autoincrement())
+  promoId   Int
+  productId Int
+
+  promo     Promo   @relation(fields: [promoId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("promo_items")
 }

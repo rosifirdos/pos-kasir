@@ -212,4 +212,58 @@ class ApiService {
     );
     return response.statusCode == 200;
   }
+
+  // ==========================================
+  // PROMO ENGINE ENDPOINTS
+  // ==========================================
+  
+  Future<List<dynamic>> getPromos() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/promos'),
+      headers: await _getHeaders(),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load promos');
+    }
+  }
+
+  Future<List<dynamic>> getActivePromos() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/promos/active'),
+      headers: await _getHeaders(),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load active promos');
+    }
+  }
+
+  Future<bool> createPromo(Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/promos'),
+      headers: await _getHeaders(isJson: true),
+      body: jsonEncode(data),
+    );
+    return response.statusCode == 201;
+  }
+
+  Future<bool> updatePromo(int id, Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/promos/$id'),
+      headers: await _getHeaders(isJson: true),
+      body: jsonEncode(data),
+    );
+    return response.statusCode == 200;
+  }
+
+  Future<bool> deletePromo(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/promos/$id'),
+      headers: await _getHeaders(),
+    );
+    return response.statusCode == 200;
+  }
 }

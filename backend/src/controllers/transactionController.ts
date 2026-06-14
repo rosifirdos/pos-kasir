@@ -2,12 +2,13 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import prisma from '../config/prisma';
 import { logActivity } from '../utils/activityLogger';
+import { PromoEngineService } from '../services/promoEngineService';
 
 export const createTransaction = async (req: AuthRequest, res: Response) => {
   try {
     const { paymentMethod, items } = req.body;
     
-    // items should be an array of { productId, quantity, unitPrice }
+    // items should be an array of { productId, quantity }
     
     if (!items || items.length === 0) {
       return res.status(400).json({ error: 'Transaction must have at least one item' });
@@ -24,18 +25,27 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'You must open a shift before making transactions' });
     }
 
-    // Calculate total
-    let totalAmount = 0;
-    const details = items.map((item: any) => {
-      const subtotal = item.quantity * item.unitPrice;
-      totalAmount += subtotal;
+    // Fetch actual prices from database for security and calculations
+    const productIds = items.map((i: any) => Number(i.productId));
+    const dbProducts = await prisma.product.findMany({
+      where: { id: { in: productIds } }
+    });
+    const productsMap = new Map(dbProducts.map(p => [p.id, p]));
+
+    const cartItemsInput = items.map((item: any) => {
+      const product = productsMap.get(Number(item.productId));
+      if (!product) {
+        throw new Error(`Product ID ${item.productId} not found`);
+      }
       return {
-        productId: item.productId,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        subtotal
+        productId: Number(item.productId),
+        quantity: Number(item.quantity),
+        unitPrice: Number(product.sellPrice)
       };
     });
+
+    // Run Promo Engine
+    const evaluation = await PromoEngineService.evaluateCart(cartItemsInput);
 
     // Generate Invoice Number (e.g., INV-YYYYMMDD-HHMMSS-RANDOM)
     const invoiceNumber = `INV-${new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)}-${Math.floor(Math.random() * 1000)}`;
@@ -46,12 +56,21 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
       const transaction = await tx.transaction.create({
         data: {
           invoiceNumber,
-          totalAmount,
+          totalAmount: evaluation.totalFinalAmount,
+          discountAmount: evaluation.totalDiscountAmount,
           paymentMethod: paymentMethod || 'CASH',
           cashierId: userId,
           shiftId: shift.id,
+          promoId: evaluation.appliedPromoId,
           details: {
-            create: details
+            create: evaluation.items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              discountAmount: item.discountAmount,
+              subtotal: item.subtotal,
+              promoId: item.promoId,
+            }))
           }
         },
         include: {
@@ -64,7 +83,7 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
       });
 
       // 2. Reduce Stock
-      for (const item of details) {
+      for (const item of evaluation.items) {
         // Fetch current stock to prevent negative stock (optional, but good for validation)
         const product = await tx.product.findUnique({ where: { id: item.productId } });
         if (!product || product.currentStock < item.quantity) {
@@ -81,10 +100,32 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
         });
       }
 
+      // 3. Increment Promo Used Count
+      const usedPromoIds = new Set<number>();
+      if (evaluation.appliedPromoId) {
+        usedPromoIds.add(evaluation.appliedPromoId);
+      }
+      for (const item of evaluation.items) {
+        if (item.promoId) {
+          usedPromoIds.add(item.promoId);
+        }
+      }
+
+      for (const pId of usedPromoIds) {
+        await tx.promo.update({
+          where: { id: pId },
+          data: {
+            usedCount: {
+              increment: 1
+            }
+          }
+        });
+      }
+
       return transaction;
     });
 
-    await logActivity('TRANSACTION', 'Transaction', result.id, `Completed transaction ${invoiceNumber} for Rp ${totalAmount}`);
+    await logActivity('TRANSACTION', 'Transaction', result.id, `Completed transaction ${invoiceNumber} for Rp ${evaluation.totalFinalAmount}`);
     res.status(201).json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

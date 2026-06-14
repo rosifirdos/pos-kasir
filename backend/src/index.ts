@@ -11,6 +11,7 @@ import activityRoutes from './routes/activityRoutes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import shiftRoutes from './routes/shiftRoutes';
+import promoRoutes from './routes/promoRoutes';
 import { authenticateToken } from './middlewares/authMiddleware';
 
 const app = express();
@@ -27,6 +28,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/shifts', shiftRoutes);
+app.use('/api/promos', promoRoutes);
 
 app.use('/api/categories', authenticateToken, categoryRoutes);
 app.use('/api/products', authenticateToken, productRoutes);

@@ -35,6 +35,7 @@ class _PosScreenState extends State<PosScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkShift();
       Provider.of<ProductProvider>(context, listen: false).fetchData();
+      Provider.of<CartProvider>(context, listen: false).fetchActivePromos();
     });
   }
 
@@ -351,10 +352,47 @@ class _PosScreenState extends State<PosScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          if (cartProvider.totalDiscountAmount > 0) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Subtotal', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                                Text(_formatter.format(cartProvider.originalTotalAmount), style: TextStyle(fontSize: 16, color: Colors.grey.shade700)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text('Diskon', style: TextStyle(fontSize: 14, color: Colors.green.shade700)),
+                                    if (cartProvider.appliedPromoName != null) ...[
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade50,
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Colors.green.shade200),
+                                        ),
+                                        child: Text(
+                                          cartProvider.appliedPromoName!,
+                                          style: TextStyle(fontSize: 10, color: Colors.green.shade800, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                Text('-${_formatter.format(cartProvider.totalDiscountAmount)}', style: const TextStyle(fontSize: 16, color: Colors.green, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const Divider(height: 24),
+                          ],
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Total Tagihan', style: TextStyle(fontSize: 16, color: Colors.grey.shade700)),
+                              Text('Total Tagihan', style: TextStyle(fontSize: 16, color: Colors.grey.shade700, fontWeight: FontWeight.bold)),
                               Text(_formatter.format(cartProvider.totalAmount), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.indigo)),
                             ],
                           ),
@@ -421,8 +459,10 @@ class _CartItemWidgetState extends State<CartItemWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    
+    final cartProvider = Provider.of<CartProvider>(context);
+    final discount = cartProvider.getItemDiscount(widget.cartItem.product.id);
+    final hasDiscount = discount > 0;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -433,7 +473,32 @@ class _CartItemWidgetState extends State<CartItemWidget> {
               children: [
                 Text(widget.cartItem.product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
-                Text(_formatter.format(widget.cartItem.product.sellPrice), style: TextStyle(color: Colors.grey.shade600)),
+                if (hasDiscount) ...[
+                  Row(
+                    children: [
+                      Text(
+                        _formatter.format(widget.cartItem.product.sellPrice),
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          decoration: TextDecoration.lineThrough,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatter.format(widget.cartItem.product.sellPrice - (discount / widget.cartItem.quantity)),
+                        style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Diskon: -${_formatter.format(discount)}',
+                    style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w500),
+                  ),
+                ] else ...[
+                  Text(_formatter.format(widget.cartItem.product.sellPrice), style: TextStyle(color: Colors.grey.shade600)),
+                ],
               ],
             ),
           ),

@@ -6,6 +6,7 @@ import '../providers/product_provider.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
 import 'package:intl/intl.dart';
+import 'promo_admin_screen.dart';
 
 final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
@@ -373,6 +374,19 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
             ),
           ),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.indigo,
+              side: const BorderSide(color: Colors.indigo),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            icon: const Icon(Icons.discount_outlined),
+            label: const Text('Kelola Promo'),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PromoAdminScreen()));
+            },
+          ),
+          const SizedBox(width: 12),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.indigo,

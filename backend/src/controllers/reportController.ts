@@ -28,12 +28,16 @@ export const getDailySummary = async (req: Request, res: Response) => {
 
     transactions.forEach((tx) => {
       totalRevenue += Number(tx.totalAmount);
+      let txDetailMargin = 0;
       tx.details.forEach((detail) => {
         const buyPrice = Number(detail.product.buyPrice);
         const sellPrice = Number(detail.unitPrice);
-        const margin = (sellPrice - buyPrice) * detail.quantity;
-        totalMargin += margin;
+        const itemDiscount = Number(detail.discountAmount || 0);
+        const margin = ((sellPrice - buyPrice) * detail.quantity) - itemDiscount;
+        txDetailMargin += margin;
       });
+      const txDiscount = Number(tx.discountAmount || 0);
+      totalMargin += (txDetailMargin - txDiscount);
     });
 
     res.json({

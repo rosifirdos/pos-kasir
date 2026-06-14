@@ -42,15 +42,52 @@ class ReceiptWidget extends StatelessWidget {
               pw.Divider(borderStyle: pw.BorderStyle.dashed),
               pw.SizedBox(height: 5),
               ...(transaction['details'] as List).map((item) {
-                return pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                final double discount = double.tryParse(item['discountAmount']?.toString() ?? '0') ?? 0.0;
+                final double unitPrice = double.tryParse(item['unitPrice']?.toString() ?? '0') ?? 0.0;
+                final double originalSubtotal = unitPrice * item['quantity'];
+
+                return pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Expanded(child: pw.Text('${item['product']['name']} x${item['quantity']}')),
-                    pw.Text(_formatter.format(double.parse(item['subtotal'].toString()))),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Expanded(child: pw.Text('${item['product']['name']} x${item['quantity']}')),
+                        pw.Text(_formatter.format(originalSubtotal)),
+                      ],
+                    ),
+                    if (discount > 0)
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.only(left: 10),
+                            child: pw.Text('  Diskon Item', style: pw.TextStyle(fontStyle: pw.FontStyle.italic, fontSize: 10, color: PdfColors.grey700)),
+                          ),
+                          pw.Text('-${_formatter.format(discount)}', style: pw.TextStyle(fontStyle: pw.FontStyle.italic, fontSize: 10, color: PdfColors.grey700)),
+                        ],
+                      ),
                   ],
                 );
               }).toList(),
               pw.Divider(borderStyle: pw.BorderStyle.dashed),
+              if (double.parse(transaction['discountAmount']?.toString() ?? '0') > 0) ...[
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Subtotal'),
+                    pw.Text(_formatter.format(double.parse(transaction['totalAmount'].toString()) + double.parse(transaction['discountAmount'].toString()))),
+                  ],
+                ),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Diskon'),
+                    pw.Text('-${_formatter.format(double.parse(transaction['discountAmount'].toString()))}'),
+                  ],
+                ),
+                pw.Divider(borderStyle: pw.BorderStyle.dashed),
+              ],
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -160,14 +197,34 @@ class ReceiptWidget extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildDashedLine(),
                 const SizedBox(height: 16),
-                ...details.map((item) {
+                 ...details.map((item) {
+                  final double discount = double.tryParse(item['discountAmount']?.toString() ?? '0') ?? 0.0;
+                  final double unitPrice = double.tryParse(item['unitPrice']?.toString() ?? '0') ?? 0.0;
+                  final double originalSubtotal = unitPrice * item['quantity'];
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: Text('${item['product']['name']}\n${item['quantity']} x ${_formatter.format(double.parse(item['unitPrice'].toString()))}', style: receiptTextStyle)),
-                        Text(_formatter.format(double.parse(item['subtotal'].toString())), style: receiptTextStyle),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: Text('${item['product']['name']}\n${item['quantity']} x ${_formatter.format(unitPrice)}', style: receiptTextStyle)),
+                            Text(_formatter.format(originalSubtotal), style: receiptTextStyle),
+                          ],
+                        ),
+                        if (discount > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0, top: 2.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('  Diskon Item', style: receiptTextStyle.copyWith(color: Colors.green, fontStyle: FontStyle.italic, fontSize: 11)),
+                                Text('-${_formatter.format(discount)}', style: receiptTextStyle.copyWith(color: Colors.green, fontStyle: FontStyle.italic, fontSize: 11)),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   );
@@ -175,6 +232,26 @@ class ReceiptWidget extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildDashedLine(),
                 const SizedBox(height: 16),
+                if (double.parse(transaction['discountAmount']?.toString() ?? '0') > 0) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('SUBTOTAL', style: receiptTextStyle),
+                      Text(_formatter.format(double.parse(transaction['totalAmount'].toString()) + double.parse(transaction['discountAmount'].toString())), style: receiptTextStyle),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('DISKON', style: receiptTextStyle.copyWith(color: Colors.green)),
+                      Text('-${_formatter.format(double.parse(transaction['discountAmount'].toString()))}', style: receiptTextStyle.copyWith(color: Colors.green)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildDashedLine(),
+                  const SizedBox(height: 16),
+                ],
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
