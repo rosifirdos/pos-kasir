@@ -6,9 +6,36 @@ export const getProducts = async (req: Request, res: Response) => {
   try {
     const products = await prisma.product.findMany({
       where: { deletedAt: null },
-      include: { category: true }
+      include: { 
+        category: true,
+        recipes: {
+          include: { rawMaterial: true }
+        }
+      }
     });
-    res.json(products);
+
+    const productsWithVirtualStock = products.map((product) => {
+      if (product.isRecipeBased && product.recipes.length > 0) {
+        let maxPortions = Infinity;
+        for (const recipe of product.recipes) {
+           const needed = Number(recipe.quantityNeeded);
+           if (needed > 0) {
+             const available = Number(recipe.rawMaterial.stockQuantity);
+             const portions = Math.floor(available / needed);
+             if (portions < maxPortions) {
+               maxPortions = portions;
+             }
+           }
+        }
+        return {
+          ...product,
+          currentStock: maxPortions === Infinity ? 0 : maxPortions
+        };
+      }
+      return product;
+    });
+
+    res.json(productsWithVirtualStock);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

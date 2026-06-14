@@ -14,6 +14,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final ApiService _apiService = ApiService();
   Map<String, dynamic>? _summary;
   List<dynamic>? _topProducts;
+  List<dynamic> _lowStockMaterials = [];
   bool _isLoading = true;
 
   @override
@@ -28,10 +29,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final summary = await _apiService.getDailySummary();
       final topProducts = await _apiService.getTopProducts();
+      final rawMaterials = await _apiService.getRawMaterials();
+      
+      final lowStock = rawMaterials.where((m) {
+        final stock = double.tryParse(m['stockQuantity'].toString()) ?? 0;
+        final minStock = double.tryParse(m['minimumStock'].toString()) ?? 0;
+        return stock <= minStock;
+      }).toList();
+
       if (mounted) {
         setState(() {
           _summary = summary;
           _topProducts = topProducts;
+          _lowStockMaterials = lowStock;
           _isLoading = false;
         });
       }
@@ -111,6 +121,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
+                  if (_lowStockMaterials.isNotEmpty) ...[
+                    const SizedBox(height: 48),
+                    const Text(
+                      'Peringatan Stok Bahan Baku Menipis',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red),
+                    ),
+                    const SizedBox(height: 24),
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        side: BorderSide(color: Colors.red.shade200),
+                      ),
+                      color: Colors.red.shade50,
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: _lowStockMaterials.length,
+                        separatorBuilder: (context, index) => Divider(color: Colors.red.shade100, height: 1),
+                        itemBuilder: (context, index) {
+                          final m = _lowStockMaterials[index];
+                          final stock = double.tryParse(m['stockQuantity'].toString()) ?? 0;
+                          final minStock = double.tryParse(m['minimumStock'].toString()) ?? 0;
+                          final unit = m['unit']['abbreviation'];
+                          return ListTile(
+                            leading: const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 36),
+                            title: Text(m['name'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                            subtitle: Text('Sisa Stok: $stock $unit (Batas Minimum: $minStock $unit)'),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 48),
                   const Text(
                     '5 Produk Terlaris Hari Ini',

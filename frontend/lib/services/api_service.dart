@@ -266,4 +266,65 @@ class ApiService {
     );
     return response.statusCode == 200;
   }
+
+  // ==========================================
+  // RECIPE / BOM ENDPOINTS
+  // ==========================================
+
+  Future<List<dynamic>> getUnits() async {
+    final response = await http.get(Uri.parse('$baseUrl/units'), headers: await _getHeaders());
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    throw Exception('Failed to load units');
+  }
+
+  Future<bool> createUnit(Map<String, dynamic> data) async {
+    final response = await http.post(Uri.parse('$baseUrl/units'), headers: await _getHeaders(isJson: true), body: jsonEncode(data));
+    return response.statusCode == 201;
+  }
+
+  Future<bool> updateUnit(int id, Map<String, dynamic> data) async {
+    final response = await http.put(Uri.parse('$baseUrl/units/$id'), headers: await _getHeaders(isJson: true), body: jsonEncode(data));
+    return response.statusCode == 200;
+  }
+
+  Future<bool> deleteUnit(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/units/$id'), headers: await _getHeaders());
+    return response.statusCode == 200;
+  }
+
+  Future<List<dynamic>> getRawMaterials() async {
+    final response = await http.get(Uri.parse('$baseUrl/raw-materials'), headers: await _getHeaders());
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    throw Exception('Failed to load raw materials');
+  }
+
+  Future<bool> createRawMaterial(Map<String, dynamic> data) async {
+    final response = await http.post(Uri.parse('$baseUrl/raw-materials'), headers: await _getHeaders(isJson: true), body: jsonEncode(data));
+    return response.statusCode == 201;
+  }
+
+  Future<bool> updateRawMaterial(int id, Map<String, dynamic> data) async {
+    final response = await http.put(Uri.parse('$baseUrl/raw-materials/$id'), headers: await _getHeaders(isJson: true), body: jsonEncode(data));
+    return response.statusCode == 200;
+  }
+
+  Future<bool> deleteRawMaterial(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/raw-materials/$id'), headers: await _getHeaders());
+    return response.statusCode == 200;
+  }
+
+  Future<List<dynamic>> getRecipesByProduct(int productId) async {
+    final response = await http.get(Uri.parse('$baseUrl/recipes/product/$productId'), headers: await _getHeaders());
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    throw Exception('Failed to load recipes');
+  }
+
+  Future<bool> saveRecipes(int productId, List<Map<String, dynamic>> recipes) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/recipes/product/$productId'),
+      headers: await _getHeaders(isJson: true),
+      body: jsonEncode({'recipes': recipes}),
+    );
+    return response.statusCode == 200;
+  }
 }

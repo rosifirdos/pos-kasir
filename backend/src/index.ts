@@ -12,6 +12,9 @@ import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import shiftRoutes from './routes/shiftRoutes';
 import promoRoutes from './routes/promoRoutes';
+import unitRoutes from './routes/unitRoutes';
+import rawMaterialRoutes from './routes/rawMaterialRoutes';
+import recipeRoutes from './routes/recipeRoutes';
 import { authenticateToken } from './middlewares/authMiddleware';
 
 const app = express();
@@ -22,7 +25,7 @@ app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date() });
+  res.json({ status: 'OK', timestamp: new Date(), restarted: true });
 });
 
 app.use('/api/auth', authRoutes);
@@ -36,6 +39,10 @@ app.use('/api/transactions', transactionRoutes); // Transaction routes use authe
 app.use('/api/stocks', authenticateToken, stockRoutes);
 app.use('/api/reports', authenticateToken, reportRoutes);
 app.use('/api/activities', authenticateToken, activityRoutes);
+
+app.use('/api/units', authenticateToken, unitRoutes);
+app.use('/api/raw-materials', authenticateToken, rawMaterialRoutes);
+app.use('/api/recipes', authenticateToken, recipeRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

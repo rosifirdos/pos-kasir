@@ -7,6 +7,9 @@ import '../models/product.dart';
 import '../services/api_service.dart';
 import 'package:intl/intl.dart';
 import 'promo_admin_screen.dart';
+import 'unit_screen.dart';
+import 'raw_material_screen.dart';
+import 'recipe_builder_screen.dart';
 
 final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
@@ -393,6 +396,32 @@ class _AdminScreenState extends State<AdminScreen> {
               side: const BorderSide(color: Colors.indigo),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             ),
+            icon: const Icon(Icons.straighten),
+            label: const Text('Satuan'),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const UnitScreen()));
+            },
+          ),
+          const SizedBox(width: 12),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.indigo,
+              side: const BorderSide(color: Colors.indigo),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            icon: const Icon(Icons.category),
+            label: const Text('Bahan Baku'),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const RawMaterialScreen()));
+            },
+          ),
+          const SizedBox(width: 12),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.indigo,
+              side: const BorderSide(color: Colors.indigo),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
             icon: const Icon(Icons.add),
             label: const Text('Tambah Kategori'),
             onPressed: () => _showCategoryForm(),
@@ -516,6 +545,13 @@ class _AdminScreenState extends State<AdminScreen> {
                                       icon: const Icon(Icons.add_shopping_cart, color: Colors.teal),
                                       tooltip: 'Restok',
                                       onPressed: () => _showRestockForm(product),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.blender, color: Colors.purple),
+                                      tooltip: 'Kelola Resep',
+                                      onPressed: () {
+                                        Navigator.push(context, MaterialPageRoute(builder: (context) => RecipeBuilderScreen(product: product)));
+                                      },
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.edit_outlined, color: Colors.blue),

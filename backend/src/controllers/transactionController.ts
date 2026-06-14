@@ -85,19 +85,40 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
       // 2. Reduce Stock
       for (const item of evaluation.items) {
         // Fetch current stock to prevent negative stock (optional, but good for validation)
-        const product = await tx.product.findUnique({ where: { id: item.productId } });
-        if (!product || product.currentStock < item.quantity) {
-          throw new Error(`Insufficient stock for Product ID ${item.productId}`);
+        const product = await tx.product.findUnique({ 
+          where: { id: item.productId },
+          include: { recipes: true }
+        });
+        if (!product) {
+          throw new Error(`Product ID ${item.productId} not found`);
         }
 
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            currentStock: {
-              decrement: item.quantity
+        if (product.isRecipeBased) {
+          for (const recipe of product.recipes) {
+            const rawMaterial = await tx.rawMaterial.findUnique({ where: { id: recipe.rawMaterialId } });
+            const quantityToDeduct = Number(recipe.quantityNeeded) * item.quantity;
+            if (!rawMaterial || Number(rawMaterial.stockQuantity) < quantityToDeduct) {
+              throw new Error(`Insufficient stock for Raw Material: ${rawMaterial?.name || recipe.rawMaterialId}`);
             }
+            await tx.rawMaterial.update({
+              where: { id: recipe.rawMaterialId },
+              data: { stockQuantity: { decrement: quantityToDeduct } }
+            });
           }
-        });
+        } else {
+          if (product.currentStock < item.quantity) {
+            throw new Error(`Insufficient stock for Product ID ${item.productId}`);
+          }
+
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              currentStock: {
+                decrement: item.quantity
+              }
+            }
+          });
+        }
       }
 
       // 3. Increment Promo Used Count
@@ -203,14 +224,29 @@ async function processVoid(transactionId: number, authorizerId: number, res: Res
 
       // Restore stock
       for (const item of transaction.details) {
-        await tx.product.update({
+        const product = await tx.product.findUnique({ 
           where: { id: item.productId },
-          data: {
-            currentStock: {
-              increment: item.quantity
-            }
-          }
+          include: { recipes: true }
         });
+
+        if (product?.isRecipeBased) {
+          for (const recipe of product.recipes) {
+            const quantityToRestore = Number(recipe.quantityNeeded) * item.quantity;
+            await tx.rawMaterial.update({
+              where: { id: recipe.rawMaterialId },
+              data: { stockQuantity: { increment: quantityToRestore } }
+            });
+          }
+        } else {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              currentStock: {
+                increment: item.quantity
+              }
+            }
+          });
+        }
       }
       return voided;
     });
