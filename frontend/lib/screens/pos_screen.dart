@@ -25,6 +25,7 @@ class PosScreen extends StatefulWidget {
 }
 
 class _PosScreenState extends State<PosScreen> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   int? _selectedCategoryId;
 
@@ -38,6 +39,12 @@ class _PosScreenState extends State<PosScreen> {
       Provider.of<ProductProvider>(context, listen: false).fetchData();
       Provider.of<CartProvider>(context, listen: false).fetchActivePromos();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkShift() async {
@@ -333,9 +340,21 @@ class _PosScreenState extends State<PosScreen> {
                   child: Column(
                     children: [
                       TextField(
+                        controller: _searchController,
                         decoration: InputDecoration(
                           hintText: 'Cari produk...',
                           prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
                           contentPadding: const EdgeInsets.symmetric(vertical: 0),
                         ),
                         onChanged: (val) {

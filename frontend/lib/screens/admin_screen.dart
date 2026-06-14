@@ -21,7 +21,14 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   String _generateSku(String categoryName) {
     final cleanName = categoryName.replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), '').trim().toUpperCase();
@@ -360,9 +367,21 @@ class _AdminScreenState extends State<AdminScreen> {
             child: SizedBox(
               width: 250,
               child: TextField(
+                controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Cari SKU atau Nama...',
                   prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
                   contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   filled: true,
                   fillColor: Colors.grey.shade100,

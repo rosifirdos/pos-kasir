@@ -18,11 +18,18 @@ class _PromoAdminScreenState extends State<PromoAdminScreen> {
   List<dynamic> _promos = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchPromos();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchPromos() async {
@@ -399,9 +406,21 @@ class _PromoAdminScreenState extends State<PromoAdminScreen> {
             child: SizedBox(
               width: 250,
               child: TextField(
+                controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Cari Promo...',
                   prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
                   contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   filled: true,
                   fillColor: Colors.grey.shade100,
