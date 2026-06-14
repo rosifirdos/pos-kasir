@@ -52,11 +52,11 @@ async function main() {
   const catSnacks = await prisma.category.create({ data: { name: 'Snacks & Bites' } });
 
   // Create Products
-  const espressoSingle = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-001', name: 'Espresso Single Shot', buyPrice: 4000, sellPrice: 15000, currentStock: 0, isRecipeBased: true } });
-  const icedLatte = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-008', name: 'Iced Caffe Latte', buyPrice: 10000, sellPrice: 30000, currentStock: 0, isRecipeBased: true } });
-  const kopiSusu = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-012', name: 'Kopi Susu Gula Aren', buyPrice: 8000, sellPrice: 25000, currentStock: 0, isRecipeBased: true } });
-  const icedMatcha = await prisma.product.create({ data: { categoryId: catNonCoffee.id, sku: 'NCF-002', name: 'Iced Matcha Latte', buyPrice: 12000, sellPrice: 32000, currentStock: 0, isRecipeBased: true } });
-  const icedTea = await prisma.product.create({ data: { categoryId: catTea.id, sku: 'TEA-006', name: 'Iced Lemon Tea', buyPrice: 5000, sellPrice: 20000, currentStock: 0, isRecipeBased: true } });
+  const espressoSingle = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-001', name: 'Espresso Single Shot', buyPrice: 4000, sellPrice: 15000, currentStock: 0, isRecipeBased: true, imageUrl: '/uploads/1781423859431-769445641.jpeg' } });
+  const icedLatte = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-008', name: 'Iced Caffe Latte', buyPrice: 10000, sellPrice: 30000, currentStock: 0, isRecipeBased: true, imageUrl: '/uploads/1781423894758-597559757.jpeg' } });
+  const kopiSusu = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-012', name: 'Kopi Susu Gula Aren', buyPrice: 8000, sellPrice: 25000, currentStock: 0, isRecipeBased: true, imageUrl: '/uploads/1781423930262-221669602.jpeg' } });
+  const icedMatcha = await prisma.product.create({ data: { categoryId: catNonCoffee.id, sku: 'NCF-002', name: 'Iced Matcha Latte', buyPrice: 12000, sellPrice: 32000, currentStock: 0, isRecipeBased: true, imageUrl: '/uploads/1781423956834-870249688.jpeg' } });
+  const icedTea = await prisma.product.create({ data: { categoryId: catTea.id, sku: 'TEA-006', name: 'Iced Lemon Tea', buyPrice: 5000, sellPrice: 20000, currentStock: 0, isRecipeBased: true, imageUrl: '/uploads/1781424002841-215933063.jpeg' } });
   
   // 7 New Products (Recipe-Based)
   const icedAmericano = await prisma.product.create({ data: { categoryId: catCoffee.id, sku: 'COF-015', name: 'Iced Americano', buyPrice: 5000, sellPrice: 20000, currentStock: 0, isRecipeBased: true } });
@@ -70,9 +70,9 @@ async function main() {
   // Non-recipe items
   await prisma.product.createMany({
     data: [
-      { categoryId: catPastry.id, sku: 'PST-001', name: 'Butter Croissant', buyPrice: 12000, sellPrice: 22000, currentStock: 30, isRecipeBased: false },
-      { categoryId: catMainCourse.id, sku: 'MNC-001', name: 'Nasi Goreng Spesial', buyPrice: 20000, sellPrice: 38000, currentStock: 40, isRecipeBased: false },
-      { categoryId: catSnacks.id, sku: 'SNK-001', name: 'French Fries', buyPrice: 10000, sellPrice: 22000, currentStock: 50, isRecipeBased: false },
+      { categoryId: catPastry.id, sku: 'PST-001', name: 'Butter Croissant', buyPrice: 12000, sellPrice: 22000, currentStock: 30, isRecipeBased: false, imageUrl: '/uploads/1781424042795-481496641.jpeg' },
+      { categoryId: catMainCourse.id, sku: 'MNC-001', name: 'Nasi Goreng Spesial', buyPrice: 20000, sellPrice: 38000, currentStock: 40, isRecipeBased: false, imageUrl: '/uploads/1781424066593-633096329.jpeg' },
+      { categoryId: catSnacks.id, sku: 'SNK-001', name: 'French Fries', buyPrice: 10000, sellPrice: 22000, currentStock: 50, isRecipeBased: false, imageUrl: '/uploads/1781424107181-746505785.jpeg' },
     ],
   });
 
