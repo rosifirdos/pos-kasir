@@ -160,6 +160,9 @@ class ReceiptWidget extends StatelessWidget {
 
     return Container(
       width: 400,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
@@ -169,100 +172,109 @@ class ReceiptWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Simulate paper top edge
-          Container(height: 10, decoration: const BoxDecoration(color: Colors.white)),
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Column(
-                    children: [
-                      Text('GARIS AWAN POS', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 20)),
-                      Text('Jl. Digitalisasi Bangsa No. 1', style: receiptTextStyle),
-                      Text('Telp: 0812-3456-7890', style: receiptTextStyle),
-                      const SizedBox(height: 16),
-                      Text('STRUK PEMBAYARAN', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildDashedLine(),
-                const SizedBox(height: 16),
-                Text('No. Invoice : ${transaction['invoiceNumber']}', style: receiptTextStyle),
-                Text('Tanggal     : $date', style: receiptTextStyle),
-                Text('Metode      : ${transaction['paymentMethod']}', style: receiptTextStyle),
-                const SizedBox(height: 16),
-                _buildDashedLine(),
-                const SizedBox(height: 16),
-                 ...details.map((item) {
-                  final double discount = double.tryParse(item['discountAmount']?.toString() ?? '0') ?? 0.0;
-                  final double unitPrice = double.tryParse(item['unitPrice']?.toString() ?? '0') ?? 0.0;
-                  final double originalSubtotal = unitPrice * item['quantity'];
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Simulate paper top edge
+                  Container(height: 10, decoration: const BoxDecoration(color: Colors.white)),
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: Text('${item['product']['name']}\n${item['quantity']} x ${_formatter.format(unitPrice)}', style: receiptTextStyle)),
-                            Text(_formatter.format(originalSubtotal), style: receiptTextStyle),
-                          ],
+                        Center(
+                          child: Column(
+                            children: [
+                              Text('GARIS AWAN POS', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 20)),
+                              Text('Jl. Digitalisasi Bangsa No. 1', style: receiptTextStyle),
+                              Text('Telp: 0812-3456-7890', style: receiptTextStyle),
+                              const SizedBox(height: 16),
+                              Text('STRUK PEMBAYARAN', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ),
-                        if (discount > 0)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0, top: 2.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        const SizedBox(height: 16),
+                        _buildDashedLine(),
+                        const SizedBox(height: 16),
+                        Text('No. Invoice : ${transaction['invoiceNumber']}', style: receiptTextStyle),
+                        Text('Tanggal     : $date', style: receiptTextStyle),
+                        Text('Metode      : ${transaction['paymentMethod']}', style: receiptTextStyle),
+                        const SizedBox(height: 16),
+                        _buildDashedLine(),
+                        const SizedBox(height: 16),
+                         ...details.map((item) {
+                          final double discount = double.tryParse(item['discountAmount']?.toString() ?? '0') ?? 0.0;
+                          final double unitPrice = double.tryParse(item['unitPrice']?.toString() ?? '0') ?? 0.0;
+                          final double originalSubtotal = unitPrice * item['quantity'];
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('  Diskon Item', style: receiptTextStyle.copyWith(color: Colors.green, fontStyle: FontStyle.italic, fontSize: 11)),
-                                Text('-${_formatter.format(discount)}', style: receiptTextStyle.copyWith(color: Colors.green, fontStyle: FontStyle.italic, fontSize: 11)),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: Text('${item['product']['name']}\n${item['quantity']} x ${_formatter.format(unitPrice)}', style: receiptTextStyle)),
+                                    Text(_formatter.format(originalSubtotal), style: receiptTextStyle),
+                                  ],
+                                ),
+                                if (discount > 0)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0, top: 2.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('  Diskon Item', style: receiptTextStyle.copyWith(color: Colors.green, fontStyle: FontStyle.italic, fontSize: 11)),
+                                        Text('-${_formatter.format(discount)}', style: receiptTextStyle.copyWith(color: Colors.green, fontStyle: FontStyle.italic, fontSize: 11)),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             ),
+                          );
+                        }).toList(),
+                        const SizedBox(height: 16),
+                        _buildDashedLine(),
+                        const SizedBox(height: 16),
+                        if (double.parse(transaction['discountAmount']?.toString() ?? '0') > 0) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('SUBTOTAL', style: receiptTextStyle),
+                              Text(_formatter.format(double.parse(transaction['totalAmount'].toString()) + double.parse(transaction['discountAmount'].toString())), style: receiptTextStyle),
+                            ],
                           ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('DISKON', style: receiptTextStyle.copyWith(color: Colors.green)),
+                              Text('-${_formatter.format(double.parse(transaction['discountAmount'].toString()))}', style: receiptTextStyle.copyWith(color: Colors.green)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDashedLine(),
+                          const SizedBox(height: 16),
+                        ],
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('TOTAL', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
+                            Text(_formatter.format(double.parse(transaction['totalAmount'].toString())), 
+                              style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                        Center(child: Text('Terima Kasih atas Kunjungan Anda!', style: receiptTextStyle, textAlign: TextAlign.center)),
                       ],
                     ),
-                  );
-                }).toList(),
-                const SizedBox(height: 16),
-                _buildDashedLine(),
-                const SizedBox(height: 16),
-                if (double.parse(transaction['discountAmount']?.toString() ?? '0') > 0) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('SUBTOTAL', style: receiptTextStyle),
-                      Text(_formatter.format(double.parse(transaction['totalAmount'].toString()) + double.parse(transaction['discountAmount'].toString())), style: receiptTextStyle),
-                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('DISKON', style: receiptTextStyle.copyWith(color: Colors.green)),
-                      Text('-${_formatter.format(double.parse(transaction['discountAmount'].toString()))}', style: receiptTextStyle.copyWith(color: Colors.green)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  _buildDashedLine(),
-                  const SizedBox(height: 16),
                 ],
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('TOTAL', style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
-                    Text(_formatter.format(double.parse(transaction['totalAmount'].toString())), 
-                      style: receiptTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                Center(child: Text('Terima Kasih atas Kunjungan Anda!', style: receiptTextStyle, textAlign: TextAlign.center)),
-              ],
+              ),
             ),
           ),
           const SizedBox(height: 24),
